@@ -4,7 +4,7 @@ import reactivemongo.bson.BSONObjectID
 
 trait IdentifiableModel {
 
-  var _id: Option[BSONObjectID]
+  var _id: BSONObjectID
 
-  def identify = _id.map(value => value.stringify).getOrElse("unknown")
+  def identify = _id.stringify
 }

@@ -9,7 +9,7 @@ import play.api.libs.json.JsPath
 import reactivemongo.bson.BSONObjectID
 
 case class User(
-  override var _id: Option[BSONObjectID],
+  override var _id: BSONObjectID,
   loginInfo: LoginInfo,
   username: String,
   email: Option[String] = None,
@@ -31,7 +31,7 @@ object User {
   )(LoginInfo.apply, unlift(LoginInfo.unapply))
 
   implicit val userFormat: Format[User] = (
-    (JsPath \ "_id").formatNullable[BSONObjectID] and
+    (JsPath \ "_id").format[BSONObjectID] and
     (JsPath \ "li").format[LoginInfo] and
     (JsPath \ "n").format[String] and
     (JsPath \ "e").formatNullable[String] and

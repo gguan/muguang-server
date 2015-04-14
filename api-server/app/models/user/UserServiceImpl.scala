@@ -52,7 +52,7 @@ class UserServiceImpl @Inject() (userDAO: UserDAO) extends UserService {
         ))
       case None => // Insert a new user
         userDAO.save(User(
-          _id = Some(BSONObjectID.generate),
+          _id = BSONObjectID.generate,
           loginInfo = profile.loginInfo,
           username = profile.firstName + "_" + profile.lastName,
           email = profile.email,
