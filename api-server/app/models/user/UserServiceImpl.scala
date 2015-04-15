@@ -5,9 +5,11 @@ import javax.inject.Inject
 import com.mohiva.play.silhouette.api.LoginInfo
 import com.mohiva.play.silhouette.impl.providers.CommonSocialProfile
 import models.{ UserSummary, User }
+import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Json
 import reactivemongo.bson.BSONObjectID
+import utils.oauth2.WeiboProfile
 
 import scala.concurrent.Future
 
@@ -46,7 +48,7 @@ class UserServiceImpl @Inject() (userDAO: UserDAO) extends UserService {
     userDAO.find(profile.loginInfo).flatMap {
       case Some(user) => // Update user with profile
         userDAO.save(user.copy(
-          username = profile.firstName + "_" + profile.lastName,
+          screenName = profile.firstName + "_" + profile.lastName,
           email = profile.email,
           avatarUrl = profile.avatarURL
         ))
@@ -54,9 +56,36 @@ class UserServiceImpl @Inject() (userDAO: UserDAO) extends UserService {
         userDAO.save(User(
           _id = BSONObjectID.generate,
           loginInfo = profile.loginInfo,
-          username = profile.firstName + "_" + profile.lastName,
+          screenName = profile.firstName + "_" + profile.lastName,
           email = profile.email,
           avatarUrl = profile.avatarURL
+        ))
+    }
+  }
+
+  /**
+   * Saves the weibo profile for a user.
+   *
+   * If a user exists for this profile then update the user, otherwise create a new user with the given profile.
+   *
+   * @param profile The social profile to save.
+   * @return The user for whom the profile was saved.
+   */
+  override def save(profile: WeiboProfile): Future[User] = {
+    userDAO.find(profile.loginInfo).flatMap {
+      case Some(user) => // Not update if find user with profile
+        Logger.info("user exists!")
+        Future.successful(user)
+      case None => // Insert a new user
+        userDAO.save(User(
+          _id = BSONObjectID.generate,
+          loginInfo = profile.loginInfo,
+          screenName = profile.screenName,
+          email = profile.email,
+          biography = profile.biography,
+          location = profile.location,
+          avatarUrl = profile.avatarUrl,
+          gender = profile.gender
         ))
     }
   }
@@ -76,7 +105,7 @@ class UserServiceImpl @Inject() (userDAO: UserDAO) extends UserService {
       //      countTweets <- tweetService.countTweets(user.get.identify)
       //      countFollowers <- userDAO.countFollowers(user.get.identify)
     } yield UserSummary(user.get.identify,
-      user.get.username,
+      user.get.screenName,
       user.get.avatarUrl,
       user.get.biography,
       0,

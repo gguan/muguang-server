@@ -11,7 +11,7 @@ import reactivemongo.bson.BSONObjectID
 case class User(
   override var _id: BSONObjectID,
   loginInfo: LoginInfo,
-  username: String,
+  screenName: String,
   email: Option[String] = None,
   created: DateTime = DateTime.now,
   biography: Option[String] = None,
@@ -33,7 +33,7 @@ object User {
   implicit val userFormat: Format[User] = (
     (JsPath \ "_id").format[BSONObjectID] and
     (JsPath \ "li").format[LoginInfo] and
-    (JsPath \ "n").format[String] and
+    (JsPath \ "sn").format[String] and
     (JsPath \ "e").formatNullable[String] and
     (JsPath \ "ct").format[DateTime] and
     (JsPath \ "b").formatNullable[String] and

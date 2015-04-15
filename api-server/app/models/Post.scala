@@ -17,7 +17,8 @@ case class Post(
   comments: Seq[Comment],
   location: Option[Feature[LatLng]],
   altitude: Option[Double],
-  emotions: Seq[PostEmotion]) extends Identity with IdentifiableModel
+  emotions: Seq[PostEmotion],
+  hashtags: Set[String]) extends Identity with IdentifiableModel
 
 object Post {
 
@@ -32,7 +33,8 @@ object Post {
     (JsPath \ "cm").format[Seq[Comment]] and
     (JsPath \ "loc").formatNullable[Feature[LatLng]] and
     (JsPath \ "alt").formatNullable[Double] and
-    (JsPath \ "em").format[Seq[PostEmotion]]
+    (JsPath \ "em").format[Seq[PostEmotion]] and
+    (JsPath \ "ht").format[Set[String]]
   )(Post.apply, unlift(Post.unapply))
 
 }

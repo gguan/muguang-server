@@ -21,7 +21,7 @@ trait BaseDocumentDao[M <: IdentifiableModel] extends BaseDao with DocumentDao[M
   lazy val collection = db.collection[JSONCollection](collectionName)
 
   def insert(document: M)(implicit writer: Writes[M]): Future[Either[ServiceException, M]] = {
-    document._id = Some(BSONObjectID.generate)
+    document._id = BSONObjectID.generate
     Logger.debug(s"Inserting document: [collection=$collectionName, data=$document]")
     Recover(collection.insert(document)) {
       document
