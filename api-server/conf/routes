@@ -5,7 +5,7 @@
 # Home page
 GET         /                                @controllers.ApplicationController.index
 GET         /test                            @controllers.ApplicationController.test
-GET         /authenticate/:provider          @controllers.SocialAuthController.authenticate(provider)
+POST        /api/v1/authenticate/:provider   @controllers.SocialAuthController.verifySocialAuth(provider)
 
 # Map static resources from the /public folder to the /assets URL path
 GET         /assets/*file                    controllers.Assets.at(path="/public", file)
