@@ -1,14 +1,14 @@
 #!/bin/bash
-# {{app_name}} daemon
-# description: {{app_name}} daemon
-# processname: {{app_name}}
+# {{app_name}}{{test_tag}} daemon
+# description: {{app_name}}{{test_tag}} daemon
+# processname: {{app_name}}{{test_tag}}
 
 DAEMON_PATH="/home/ubuntu/{{app_name}}-{{app_version}}/bin"
 DAEMON_SCRIPT="/home/ubuntu/{{app_name}}-{{app_version}}/bin/{{app_name}}"
 DAEMON="/home/ubuntu/{{app_name}}-{{app_version}}/bin/{{app_name}} {{jvm_opts}} {{extra_configs}}"
 DAEMONOPTS=""
 
-NAME={{app_name}}
+NAME={{app_name}}{{test_tag}}
 DESC="{{app_description}}"
 PIDFILE=/var/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME

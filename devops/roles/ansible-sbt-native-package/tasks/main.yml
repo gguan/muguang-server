@@ -2,10 +2,10 @@
 # This role contains a play that will work for any playframework based service
 
 - name: Create init script from template
-  template: src=init.sh dest=/etc/init.d/{{app_name}} mode=0755
+  template: src=init.sh dest=/etc/init.d/{{app_name}}{{test_tag}} mode=0755
 
 - name: Stop the service
-  service: name={{app_name}} state=stopped enabled=yes
+  service: name={{app_name}}{{test_tag}} state=stopped enabled=yes
 
 - name: wait for instances to stop on port:{{app_port}}
   wait_for: port={{app_port}} state=stopped
@@ -17,7 +17,7 @@
   unarchive: src={{dist_path}} dest=/home/ubuntu/
 
 - name: Start the service
-  service: name={{app_name}} state=restarted enabled=yes
+  service: name={{app_name}}{{test_tag}} state=restarted enabled=yes
   sudo: yes
 
 - name: wait for instances to listen on port:{{app_port}}
