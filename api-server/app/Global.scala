@@ -6,7 +6,8 @@ import play.api.GlobalSettings
 import play.api.i18n.{ Lang, Messages }
 import play.api.libs.json.Json
 import play.api.mvc.Results._
-import play.api.mvc.{ RequestHeader, Result }
+import play.api.mvc.{ WithFilters, RequestHeader, Result }
+import play.filters.gzip.GzipFilter
 import utils.di.SilhouetteModule
 
 import scala.concurrent.Future
@@ -14,7 +15,7 @@ import scala.concurrent.Future
 /**
  * The global object.
  */
-object Global extends Global
+object Global extends WithFilters(new GzipFilter()) with Global
 
 /**
  * The global configuration.

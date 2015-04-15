@@ -17,7 +17,8 @@ libraryDependencies ++= Seq(
   "org.reactivemongo"         %% "play2-reactivemongo"      % "0.10.5.0.akka23",
   "com.mohiva"                %% "play-silhouette-testkit"  % "2.0" % "test",
   "de.flapdoodle.embed"       %  "de.flapdoodle.embed.mongo" % "1.47.2" % "test",
-  cache
+  cache,
+  filters
 )
 
 //********************************************************
