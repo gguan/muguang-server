@@ -1,16 +1,11 @@
 package utils.oauth2
 
-import com.mohiva.play.silhouette.api.LoginInfo
 import com.mohiva.play.silhouette.api.util.HTTPLayer
+import com.mohiva.play.silhouette.api.LoginInfo
 import com.mohiva.play.silhouette.impl.exceptions.{ UnexpectedResponseException, ProfileRetrievalException }
-import com.mohiva.play.silhouette.impl.providers.CommonSocialProfile
-import com.mohiva.play.silhouette.impl.providers.CommonSocialProfileBuilder
-import com.mohiva.play.silhouette.impl.providers.OAuth2Info
-import com.mohiva.play.silhouette.impl.providers.OAuth2Provider
+import com.mohiva.play.silhouette.impl.providers._
 import com.mohiva.play.silhouette.impl.providers.OAuth2Provider._
-import com.mohiva.play.silhouette.impl.providers.OAuth2Settings
-import com.mohiva.play.silhouette.impl.providers.OAuth2StateProvider
-import com.mohiva.play.silhouette.impl.providers.SocialProfileParser
+
 import utils.oauth2.WeiboProvider._
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.{ JsObject, JsValue }
@@ -27,7 +22,6 @@ import scala.util.{ Failure, Success, Try }
  * @param settings The provider settings.
  *
  * @see http://open.weibo.com/wiki/2/users/show
- * @see https://developers.facebook.com/docs/facebook-login/access-tokens
  */
 abstract class WeiboProvider(httpLayer: HTTPLayer, stateProvider: OAuth2StateProvider, settings: OAuth2Settings)
   extends OAuth2Provider(httpLayer, stateProvider, settings) {
@@ -47,7 +41,10 @@ abstract class WeiboProvider(httpLayer: HTTPLayer, stateProvider: OAuth2StatePro
   /**
    * Defines the URLs that are needed to retrieve the profile data.
    */
-  protected val urls = Map("api" -> GetUerAPI)
+  protected val urls = Map(
+    "userInfoAPI" -> GetUerAPI,
+    "userEmailApi" -> GetEmailAPI
+  )
 
   /**
    * Builds the social profile.
@@ -56,7 +53,8 @@ abstract class WeiboProvider(httpLayer: HTTPLayer, stateProvider: OAuth2StatePro
    * @return On success the build social profile, otherwise a failure.
    */
   protected def buildProfile(authInfo: OAuth2Info): Future[Profile] = {
-    httpLayer.url(urls("api").format(authInfo.accessToken)).get().flatMap { response =>
+    val uid = authInfo.params.map(_.getOrElse("uid", "")).getOrElse("")
+    httpLayer.url(urls("userInfoAPI").format(uid, authInfo.accessToken)).get().flatMap { response =>
       val json = response.json
       (json \ "error").asOpt[JsObject] match {
         case Some(error) =>
@@ -65,8 +63,23 @@ abstract class WeiboProvider(httpLayer: HTTPLayer, stateProvider: OAuth2StatePro
           val errorCode = (error \ "code").as[Int]
 
           throw new ProfileRetrievalException(SpecifiedProfileError.format(id, errorMsg, errorType, errorCode))
-        case _ => profileParser.parse(json)
+        case _ => profileParser.parse(json) // TODO: Need advanced privilege to get user's email
       }
+    }
+  }
+
+  def getEmail(accessToken: String): Future[Option[String]] = {
+    httpLayer.url(urls("userEmailAPI").format(accessToken)).get().map { response =>
+      val json = response.json
+      (json \ "error").asOpt[String] match {
+        case Some(error) =>
+          throw new ProfileRetrievalException(SpecifiedEmailError.format(id, error))
+        case _ =>
+          (json \ "email").asOpt[String].filter(!_.isEmpty)
+      }
+    } recover {
+      case e: Exception =>
+        None
     }
   }
 
@@ -87,10 +100,31 @@ abstract class WeiboProvider(httpLayer: HTTPLayer, stateProvider: OAuth2StatePro
   }
 }
 
+case class WeiboProfile(
+  loginInfo: LoginInfo,
+  userId: String,
+  screenName: String,
+  biography: Option[String] = None,
+  location: Option[String] = None,
+  gender: Option[String] = None,
+  avatarUrl: Option[String] = None,
+  email: Option[String] = None) extends SocialProfile
+
+trait WeiboProfileBuilder extends SocialProfileBuilder {
+  self: WeiboProvider =>
+
+  /**
+   * The type of the profile a profile builder is responsible for.
+   */
+  type Profile = WeiboProfile
+
+  val profileParser = new WeiboProfileParser
+}
+
 /**
- * The profile parser for the common social profile.
+ * The profile parser for the weibo profile.
  */
-class WeiboProfileParser extends SocialProfileParser[JsValue, CommonSocialProfile] {
+class WeiboProfileParser extends SocialProfileParser[JsValue, WeiboProfile] {
 
   /**
    * Parses the social profile.
@@ -99,33 +133,26 @@ class WeiboProfileParser extends SocialProfileParser[JsValue, CommonSocialProfil
    * @return The social profile from given result.
    */
   def parse(json: JsValue) = Future.successful {
-    val userID = (json \ "id").as[String]
-    val firstName = (json \ "first_name").asOpt[String]
-    val lastName = (json \ "last_name").asOpt[String]
-    val fullName = (json \ "name").asOpt[String]
-    val avatarURL = (json \ "picture" \ "data" \ "url").asOpt[String]
-    val email = (json \ "email").asOpt[String]
 
-    CommonSocialProfile(
-      loginInfo = LoginInfo(ID, userID),
-      firstName = firstName,
-      lastName = lastName,
-      fullName = fullName,
-      avatarURL = avatarURL,
-      email = email)
+    val userId = (json \ "idstr").as[String]
+    val screenName = (json \ "screen_name").as[String]
+    val biography = (json \ "description").asOpt[String]
+    val location = (json \ "location").asOpt[String]
+    val gender = (json \ "gender").asOpt[String]
+    val avatarUrl = (json \ "profile_image_url").asOpt[String]
+
+    WeiboProfile(
+      userId = userId,
+      loginInfo = LoginInfo(ID, userId),
+      screenName = screenName,
+      biography = biography,
+      location = location,
+      gender = gender,
+      avatarUrl = avatarUrl,
+      email = None
+    )
   }
-}
 
-/**
- * The profile builder for the common social profile.
- */
-trait WeiboProfileBuilder extends CommonSocialProfileBuilder {
-  self: WeiboProvider =>
-
-  /**
-   * The profile parser implementation.
-   */
-  val profileParser = new WeiboProfileParser
 }
 
 /**
@@ -137,6 +164,11 @@ object WeiboProvider {
    * The error messages.
    */
   val SpecifiedProfileError = "[Silhouette][%s] Error retrieving profile information. Error message: %s, type: %s, code: %s"
+
+  /**
+   * The error messages.
+   */
+  val SpecifiedEmailError = "[Silhouette][%s] Error retrieving email information. Error message: %s"
 
   /**
    * The Weibo constants.
@@ -156,4 +188,5 @@ object WeiboProvider {
   def apply(httpLayer: HTTPLayer, stateProvider: OAuth2StateProvider, settings: OAuth2Settings) = {
     new WeiboProvider(httpLayer, stateProvider, settings) with WeiboProfileBuilder
   }
+
 }
