@@ -33,7 +33,6 @@ class SilhouetteModule extends AbstractModule with ScalaModule {
     bind[UserService].to[UserServiceImpl]
     bind[UserDAO].to[UserDAOImpl]
     bind[DelegableAuthInfoDAO[OAuth2Info]].to[OAuth2InfoDAO]
-    bind[CacheLayer].to[RedisCacheLayer]
     bind[HTTPLayer].to[PlayHTTPLayer]
     bind[IDGenerator].toInstance(new SecureRandomIDGenerator(32))
     bind[FingerprintGenerator].toInstance(new DefaultFingerprintGenerator(false))
@@ -72,13 +71,11 @@ class SilhouetteModule extends AbstractModule with ScalaModule {
   /**
    * Provides the authenticator service.
    *
-   * @param cacheLayer The cache layer implementation.
    * @param idGenerator The ID generator used to create the authenticator ID.
    * @return The authenticator service.
    */
   @Provides
   def provideAuthenticatorService(
-    cacheLayer: CacheLayer,
     idGenerator: IDGenerator,
     fingerprintGenerator: FingerprintGenerator): AuthenticatorService[BearerTokenAuthenticator] = {
 
@@ -86,7 +83,7 @@ class SilhouetteModule extends AbstractModule with ScalaModule {
       headerName = Play.configuration.getString("silhouette.authenticator.headerName").get,
       authenticatorIdleTimeout = None,
       authenticatorExpiry = Play.configuration.getInt("silhouette.authenticator.authenticatorExpiry").get
-    ), new RedisCacheBearerTokenAuthenticatorDAO(cacheLayer), idGenerator, Clock())
+    ), new RedisCacheBearerTokenAuthenticatorDAO(new RedisCacheLayer()), idGenerator, Clock())
   }
 
   /**

@@ -16,7 +16,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
  *
  * @param cacheLayer The cache layer implementation.
  */
-class RedisCacheBearerTokenAuthenticatorDAO(cacheLayer: CacheLayer) extends AuthenticatorDAO[BearerTokenAuthenticator] {
+class RedisCacheBearerTokenAuthenticatorDAO(cacheLayer: RedisCacheLayer) extends AuthenticatorDAO[BearerTokenAuthenticator] {
 
   /**
    * Saves the authenticator.
@@ -25,7 +25,7 @@ class RedisCacheBearerTokenAuthenticatorDAO(cacheLayer: CacheLayer) extends Auth
    * @return The saved auth info.
    */
   def save(authenticator: BearerTokenAuthenticator): Future[BearerTokenAuthenticator] = {
-    cacheLayer.save[String](
+    cacheLayer.save(
       authenticator.id,
       authenticator.pickle.value,
       (authenticator.expirationDate.getMillis - DateTime.now.getMillis).toInt / 1000
@@ -39,7 +39,7 @@ class RedisCacheBearerTokenAuthenticatorDAO(cacheLayer: CacheLayer) extends Auth
    * @return The found authenticator or None if no authenticator could be found for the given ID.
    */
   def find(id: String): Future[Option[BearerTokenAuthenticator]] = {
-    cacheLayer.find[String](id).map {
+    cacheLayer.find(id).map {
       authenticatorOpt => authenticatorOpt.map(str => JSONPickle(str).unpickle[BearerTokenAuthenticator])
     }
   }
