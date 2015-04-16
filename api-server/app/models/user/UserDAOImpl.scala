@@ -8,7 +8,6 @@ import play.api.libs.json.Json
 import reactivemongo.api.indexes.IndexType
 import reactivemongo.bson.BSONObjectID
 
-import scala.collection.mutable
 import scala.concurrent.Future
 
 /**

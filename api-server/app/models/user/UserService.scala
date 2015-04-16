@@ -1,9 +1,10 @@
 package models.user
 
+import com.mohiva.play.silhouette.api.LoginInfo
 import com.mohiva.play.silhouette.api.services.IdentityService
 import com.mohiva.play.silhouette.impl.providers.CommonSocialProfile
 import models.{ UserSummary, User }
-import utils.oauth2.WeiboProfile
+import utils.sihouette.WeiboProfile
 
 import scala.concurrent.Future
 
@@ -45,4 +46,6 @@ trait UserService extends IdentityService[User] {
   def unfollow(unfollowed: String, follower: String): Unit
 
   def loadUserSummary(username: String): Future[UserSummary]
+
+  def getUserRefreshTokenWithLoginInfo(userId: String): Future[Option[(Option[String], LoginInfo)]]
 }

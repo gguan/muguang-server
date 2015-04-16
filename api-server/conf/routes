@@ -8,6 +8,7 @@ GET         /test1                           @controllers.ApplicationController.
 GET         /test2                           @controllers.ApplicationController.test2
 GET         /authenticate/:provider          @controllers.SocialAuthController.authenticate(provider)
 POST        /api/v1/authenticate/:provider   @controllers.SocialAuthController.verifySocialAuth(provider)
+POST        /api/v1/refreshToken             @controllers.SocialAuthController.refreshToken
 
 # Map static resources from the /public folder to the /assets URL path
 GET         /assets/*file                    controllers.Assets.at(path="/public", file)

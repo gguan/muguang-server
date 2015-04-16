@@ -4,12 +4,12 @@ import javax.inject.Inject
 
 import com.mohiva.play.silhouette.api.LoginInfo
 import com.mohiva.play.silhouette.impl.providers.CommonSocialProfile
+import com.muguang.util.RandomUtils
 import models.{ UserSummary, User }
-import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Json
 import reactivemongo.bson.BSONObjectID
-import utils.oauth2.WeiboProfile
+import utils.sihouette.WeiboProfile
 
 import scala.concurrent.Future
 
@@ -46,16 +46,18 @@ class UserServiceImpl @Inject() (userDAO: UserDAO) extends UserService {
    */
   def save(profile: CommonSocialProfile) = {
     userDAO.find(profile.loginInfo).flatMap {
-      case Some(user) => // Update user with profile
-        userDAO.save(user.copy(
-          screenName = profile.firstName + "_" + profile.lastName,
-          email = profile.email,
-          avatarUrl = profile.avatarURL
-        ))
+      case Some(user) =>
+        // Not update if find user with profile, only update refresh_token
+        userDAO.update(user.identify, user.copy(refreshToken = Some(RandomUtils.generateToken())))
+          .map(result => result match {
+            case Left(ex) => throw ex
+            case Right(u) => u
+          })
       case None => // Insert a new user
         userDAO.save(User(
           _id = BSONObjectID.generate,
           loginInfo = profile.loginInfo,
+          refreshToken = Some(RandomUtils.generateToken()),
           screenName = profile.firstName + "_" + profile.lastName,
           email = profile.email,
           avatarUrl = profile.avatarURL
@@ -73,13 +75,18 @@ class UserServiceImpl @Inject() (userDAO: UserDAO) extends UserService {
    */
   override def save(profile: WeiboProfile): Future[User] = {
     userDAO.find(profile.loginInfo).flatMap {
-      case Some(user) => // Not update if find user with profile
-        Logger.info("user exists!")
-        Future.successful(user)
+      case Some(user) =>
+        // Not update if find user with profile, only update refresh_token
+        userDAO.update(user.identify, user.copy(refreshToken = Some(RandomUtils.generateToken())))
+          .map(result => result match {
+            case Left(ex) => throw ex
+            case Right(u) => u
+          })
       case None => // Insert a new user
         userDAO.save(User(
           _id = BSONObjectID.generate,
           loginInfo = profile.loginInfo,
+          refreshToken = Some(RandomUtils.generateToken()),
           screenName = profile.screenName,
           email = profile.email,
           biography = profile.biography,
@@ -111,6 +118,12 @@ class UserServiceImpl @Inject() (userDAO: UserDAO) extends UserService {
       0,
       user.get.following.size,
       0)
+  }
+
+  def getUserRefreshTokenWithLoginInfo(userId: String): Future[Option[(Option[String], LoginInfo)]] = {
+    userDAO.findById(userId).map { userOpt =>
+      userOpt.map(user => (user.refreshToken, user.loginInfo))
+    }
   }
 
 }

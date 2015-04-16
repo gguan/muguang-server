@@ -1,10 +1,8 @@
 package com.muguang.core.dao
 
-import com.muguang.core.db.DBQueryBuilder
 import com.muguang.core.exceptions.ServiceException
 import com.muguang.core.models.IdentifiableModel
 import play.api.libs.json._
-import reactivemongo.api.QueryOpts
 import reactivemongo.api.indexes.{ Index, IndexType }
 import reactivemongo.bson.{ BSONDocument, BSONObjectID }
 
