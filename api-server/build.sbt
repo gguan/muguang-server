@@ -9,6 +9,8 @@ resolvers := ("Atlassian Releases" at "https://maven.atlassian.com/public/") +: 
 resolvers += Resolver.sonatypeRepo("snapshots")
 
 libraryDependencies ++= Seq(
+  "redis.clients"             %  "jedis"            % "2.7.0",
+  "org.scala-lang.modules"    %% "scala-pickling"   % "0.10.0",
   "com.github.nscala-time"    %% "nscala-time"      % "1.8.0",
   "com.typesafe.play.extras"  %% "play-geojson"     % "1.2.0",
   "com.mohiva"                %% "play-silhouette"  % "2.0",

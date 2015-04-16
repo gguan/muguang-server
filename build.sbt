@@ -23,11 +23,7 @@ lazy val apiServer = (project in file("api-server"))
   .dependsOn(apiUtil)
   .enablePlugins(PlayScala)
 
-lazy val testRedirect = (project in file("test-redirect"))
-  .enablePlugins(PlayScala)
-
 lazy val root = (project in file(".")).aggregate(
   apiUtil,
-  apiServer,
-  testRedirect
+  apiServer
 )
