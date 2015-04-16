@@ -1,6 +1,3 @@
-error.email = Valid email required
-error.required = This field is required
-invalid.credentials = Invalid credentials!
-access.denied = Access denied!
-user.exists = There already exists a user with this email!
 could.not.authenticate = Could not authenticate with social provider! Please try again!
+error.401 = 401 Unauthorized
+error.403 = 403 Forbidden
