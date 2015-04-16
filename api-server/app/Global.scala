@@ -2,7 +2,7 @@ package app
 
 import com.google.inject.Guice
 import com.mohiva.play.silhouette.api.{ Logger, SecuredSettings }
-import play.api.GlobalSettings
+import play.api._
 import play.api.i18n.{ Lang, Messages }
 import play.api.libs.json.Json
 import play.api.mvc.Results._
@@ -65,4 +65,15 @@ trait Global extends GlobalSettings with SecuredSettings with Logger {
   override def onHandlerNotFound(request: RequestHeader): Future[Result] = {
     Future.successful(NotFound(Json.obj("error" -> "404 Not Found")))
   }
+
+  override def onBadRequest(request: RequestHeader, error: String): Future[Result] = {
+    Future.successful(BadRequest(Json.obj("error" -> "400 Bad Request", "message" -> error)))
+  }
+
+  override def onError(request: RequestHeader, ex: Throwable) = {
+    Future.successful(InternalServerError(
+      Json.obj("error" -> "400 Bad Request", "message" -> ex.getMessage)
+    ))
+  }
+
 }
