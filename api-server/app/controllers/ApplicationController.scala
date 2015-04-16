@@ -3,7 +3,7 @@ package controllers
 import javax.inject.Inject
 
 import com.mohiva.play.silhouette.api.{ LoginInfo, Environment, LogoutEvent, Silhouette }
-import com.mohiva.play.silhouette.impl.authenticators.SessionAuthenticator
+import com.mohiva.play.silhouette.impl.authenticators.BearerTokenAuthenticator
 import models.User
 import models.user.UserService
 import play.api.libs.json.Json
@@ -18,8 +18,8 @@ import scala.concurrent.Future
  * @param env The Silhouette environment.
  */
 class ApplicationController @Inject() (
-  implicit val env: Environment[User, SessionAuthenticator],
-  val userService: UserService) extends Silhouette[User, SessionAuthenticator] {
+  implicit val env: Environment[User, BearerTokenAuthenticator],
+  val userService: UserService) extends Silhouette[User, BearerTokenAuthenticator] {
 
   /**
    * Handles the index action.
@@ -42,19 +42,31 @@ class ApplicationController @Inject() (
     request.authenticator.discard(result)
   }
 
-  def test = Action.async { implicit request =>
-    val u = User(
-      _id = Some(BSONObjectID.generate),
-      loginInfo = LoginInfo("a", "b"),
-      username = "test user",
-      email = Some("g@example.com")
-    )
-    val result = for {
-      user <- userService.save(u)
-      summary <- userService.loadUserSummary(u.identify)
-    } yield {
-      summary
-    }
-    result.map(s => Ok(Json.toJson(s)))
+  def test1 = Action.async {
+    Future.successful(Ok)
+  }
+
+  def test2 = SecuredAction.async { implicit request =>
+    //    val u = User(
+    //      _id = Some(BSONObjectID.generate),
+    //      loginInfo = LoginInfo("a", "b"),
+    //      username = "test user",
+    //      email = Some("g@example.com")
+    //    )
+    //    val result = for {
+    //      user <- userService.save(u)
+    //      summary <- userService.loadUserSummary(u.identify)
+    //    } yield {
+    //      summary
+    //    }
+    //    result.map(s => Ok(Json.toJson(s)))
+    //    val result = for {
+    //      user <- userService.retrieve(LoginInfo("a", "b"))
+    //      summary <- userService.loadUserSummary(user.map(_.identify).getOrElse("unknown"))
+    //    } yield {
+    //      summary
+    //    }
+    //    result.map(s => Ok(Json.toJson(s)))
+    Future.successful(Ok("test successfully"))
   }
 }
