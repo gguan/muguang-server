@@ -33,7 +33,6 @@ trait Global extends GlobalSettings with SecuredSettings with Logger {
    *
    * @param controllerClass The controller class to instantiate.
    * @return The instance of the controller class.
-   * @throws Exception if the controller couldn't be instantiated.
    */
   override def getControllerInstance[A](controllerClass: Class[A]) = injector.getInstance(controllerClass)
 
@@ -47,7 +46,7 @@ trait Global extends GlobalSettings with SecuredSettings with Logger {
    * @return The result to send to the client.
    */
   override def onNotAuthenticated(request: RequestHeader, lang: Lang): Option[Future[Result]] = {
-    Some(Future.successful(Forbidden(Json.obj("error" -> Messages("forbidden")))))
+    Some(Future.successful(Forbidden(Json.obj("error" -> Messages("error.401")))))
   }
 
   /**
@@ -60,10 +59,10 @@ trait Global extends GlobalSettings with SecuredSettings with Logger {
    * @return The result to send to the client.
    */
   override def onNotAuthorized(request: RequestHeader, lang: Lang): Option[Future[Result]] = {
-    Some(Future.successful(Unauthorized(Json.obj("error" -> Messages("access.denied")))))
+    Some(Future.successful(Unauthorized(Json.obj("error" -> Messages("error.403")))))
   }
 
   override def onHandlerNotFound(request: RequestHeader): Future[Result] = {
-    Future.successful(NotFound("404 Not found."))
+    Future.successful(NotFound(Json.obj("error" -> "404 Not Found")))
   }
 }
