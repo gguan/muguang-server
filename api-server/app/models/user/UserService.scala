@@ -4,7 +4,7 @@ import com.mohiva.play.silhouette.api.LoginInfo
 import com.mohiva.play.silhouette.api.services.IdentityService
 import com.mohiva.play.silhouette.impl.providers.CommonSocialProfile
 import models.{ UserSummary, User }
-import utils.sihouette.WeiboProfile
+import module.sihouette.WeiboProfile
 
 import scala.concurrent.Future
 

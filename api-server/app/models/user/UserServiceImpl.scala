@@ -9,7 +9,7 @@ import models.{ UserSummary, User }
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Json
 import reactivemongo.bson.BSONObjectID
-import utils.sihouette.WeiboProfile
+import module.sihouette.WeiboProfile
 
 import scala.concurrent.Future
 

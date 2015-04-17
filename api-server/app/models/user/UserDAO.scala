@@ -21,14 +21,6 @@ trait UserDAO extends DocumentDao[User] {
   def find(loginInfo: LoginInfo): Future[Option[User]]
 
   /**
-   * Finds a user by its user ID.
-   *
-   * @param userId The ID of the user to find.
-   * @return The found user or None if no user for the given ID could be found.
-   */
-  def find(userId: BSONObjectID): Future[Option[User]]
-
-  /**
    * Saves a user.
    *
    * @param user The user to save.
