@@ -1,4 +1,4 @@
-package utils.sihouette
+package module.sihouette
 
 import com.mohiva.play.silhouette.impl.authenticators.BearerTokenAuthenticator
 

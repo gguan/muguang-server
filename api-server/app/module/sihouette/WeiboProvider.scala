@@ -1,4 +1,4 @@
-package utils.sihouette
+package module.sihouette
 
 import com.mohiva.play.silhouette.api.util.HTTPLayer
 import com.mohiva.play.silhouette.api.LoginInfo
@@ -10,7 +10,7 @@ import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.{ JsObject, JsValue }
 import play.api.libs.ws.WSResponse
 
-import utils.sihouette.WeiboProvider._
+import module.sihouette.WeiboProvider._
 
 import scala.concurrent.Future
 import scala.util.{ Failure, Success, Try }

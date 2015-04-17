@@ -8,7 +8,7 @@ import play.api.libs.json.Json
 import play.api.mvc.Results._
 import play.api.mvc.{ WithFilters, RequestHeader, Result }
 import play.filters.gzip.GzipFilter
-import utils.di.SilhouetteModule
+import module.di.SilhouetteModule
 
 import scala.concurrent.Future
 

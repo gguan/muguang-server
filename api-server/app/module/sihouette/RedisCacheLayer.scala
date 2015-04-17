@@ -1,4 +1,4 @@
-package utils.sihouette
+package module.sihouette
 
 import play.api.Play
 import play.api.Play.current
