@@ -9,7 +9,7 @@ import com.mohiva.play.silhouette.impl.providers._
 import com.github.nscala_time.time.Imports._
 import models.User
 import models.user.UserService
-import utils.sihouette.{ WeiboProfileBuilder, WeiboProvider }
+import module.sihouette.{ WeiboProfileBuilder, WeiboProvider }
 import play.api.i18n.Messages
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Json
@@ -51,7 +51,7 @@ class SocialAuthController @Inject() (
               Ok("authenticate successfully.")
             ))
           } yield {
-            env.eventBus.publish(LoginEvent(user, request, request2lang))
+            env.eventBus.publish(AuthenticatedEvent(user, request, request2lang))
             result
           }
         }
@@ -94,7 +94,7 @@ class SocialAuthController @Inject() (
                 ))
               ))
             } yield {
-              env.eventBus.publish(LoginEvent(user, request, request2lang))
+              env.eventBus.publish(AuthenticatedEvent(user, request, request2lang))
               result
             }
           case _ => Future.failed(new ProviderException(s"Cannot authenticate with unexpected social provider $provider"))
