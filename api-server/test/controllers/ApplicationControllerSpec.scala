@@ -12,7 +12,7 @@ import models.User
 import net.codingwell.scalaguice.ScalaModule
 import org.specs2.mock.Mockito
 import play.api.test.{ FakeApplication, FakeRequest, WithApplication, PlaySpecification }
-import utils.di.SilhouetteModule
+import module.di.SilhouetteModule
 
 /**
  * Test case for the [[controllers.ApplicationController]] class.

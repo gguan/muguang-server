@@ -10,5 +10,8 @@ GET         /authenticate/:provider          @controllers.SocialAuthController.a
 POST        /api/v1/authenticate/:provider   @controllers.SocialAuthController.verifySocialAuth(provider)
 POST        /api/v1/refreshToken             @controllers.SocialAuthController.refreshToken
 
+POST        /api/v1/post                     @controllers.PostController.createPost()
+DELETE      /api/v1/post/:id                 @controllers.PostController.deletePost(id: String)
+
 # Map static resources from the /public folder to the /assets URL path
 GET         /assets/*file                    controllers.Assets.at(path="/public", file)
