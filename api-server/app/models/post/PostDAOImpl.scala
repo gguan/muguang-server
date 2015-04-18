@@ -19,24 +19,4 @@ class PostDAOImpl extends PostDAO with BaseDocumentDao[Post] {
     }
   }
 
-  override def save(post: Post): Future[Post] = {
-    insert(post).map {
-      result =>
-        result match {
-          case Right(document) => document
-          case Left(ex) => throw ex
-        }
-    }
-  }
-
-  override def delete(postId: String): Future[Boolean] = {
-    remove(postId).map {
-      result =>
-        result match {
-          case Right(b) => b
-          case Left(ex) => throw ex
-        }
-    }
-  }
-
 }

@@ -5,9 +5,11 @@ import javax.inject.Inject
 import com.mohiva.play.silhouette.api.{ Environment, Logger, Silhouette }
 import com.mohiva.play.silhouette.impl.authenticators.BearerTokenAuthenticator
 import models.post.PostService
-import models.{ CreatePostCommand, Post, User }
-import models.user.UserService
+import models.{ Comment, CreatePostCommand, User }
+import org.joda.time.DateTime
 import play.api.libs.json.Json
+import play.extras.geojson._
+import reactivemongo.bson.BSONObjectID
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -27,7 +29,25 @@ class PostController @Inject() (
   }
 
   def deletePost(postId: String) = SecuredAction.async(parse.json) { implicit request =>
-    postService.delete(postId, request.identity).map { result =>
+    postService.deleteByUser(postId, request.identity).map { result =>
+      if (result) Ok
+      else BadRequest
+    }
+  }
+
+  def commentPost(postId: String) = SecuredAction.async(parse.json) { implicit request =>
+
+    val replyTo = (request.body \ "reply_to").asOpt[String].map(BSONObjectID(_))
+    val body = (request.body \ "body").as[String]
+    val location = (request.body \ "location").asOpt[Feature[LatLng]]
+
+    val comment = Comment(BSONObjectID.generate, request.identity._id, replyTo, body, DateTime.now, location)
+
+    postService.addComment(postId, comment).map(result => Ok)
+  }
+
+  def deleteComment(postId: String, commentId: String) = SecuredAction.async(parse.json) { implicit request =>
+    postService.deleteCommentByUser(postId, commentId, request.identity).map { result =>
       if (result) Ok
       else BadRequest
     }
