@@ -28,7 +28,7 @@ class PostController @Inject() (
     }
   }
 
-  def deletePost(postId: String) = SecuredAction.async(parse.json) { implicit request =>
+  def deletePost(postId: String) = SecuredAction.async { implicit request =>
     postService.deleteByUser(postId, request.identity).map { result =>
       if (result) Ok
       else BadRequest
@@ -46,7 +46,7 @@ class PostController @Inject() (
     postService.addComment(postId, comment).map(result => Ok)
   }
 
-  def deleteComment(postId: String, commentId: String) = SecuredAction.async(parse.json) { implicit request =>
+  def deleteComment(postId: String, commentId: String) = SecuredAction.async { implicit request =>
     postService.deleteCommentByUser(postId, commentId, request.identity).map { result =>
       if (result) Ok
       else BadRequest

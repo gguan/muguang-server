@@ -20,7 +20,7 @@ class FollowController @Inject() (
     }
   }
 
-  def unfollow(id: String) = SecuredAction.async(parse.json) { implicit request =>
+  def unfollow(id: String) = SecuredAction.async { implicit request =>
     userService.unfollow(id, request.identity.identify).map { result =>
       if (result) Ok
       else BadRequest
