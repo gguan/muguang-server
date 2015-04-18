@@ -41,9 +41,9 @@ trait UserService extends IdentityService[User] {
    */
   def save(profile: WeiboProfile): Future[User]
 
-  def follow(followed: String, follower: String): Unit
+  def follow(followed: String, follower: String): Future[Boolean]
 
-  def unfollow(unfollowed: String, follower: String): Unit
+  def unfollow(unfollowed: String, follower: String): Future[Boolean]
 
   def loadUserSummary(username: String): Future[UserSummary]
 

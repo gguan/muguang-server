@@ -97,13 +97,25 @@ class UserServiceImpl @Inject() (userDAO: UserDAO) extends UserService {
     }
   }
 
-  override def follow(followed: String, follower: String): Unit = {
+  override def follow(followed: String, follower: String): Future[Boolean] = {
     val query = Json.obj("$addToSet" -> Json.obj("f" -> followed))
-    userDAO.update(follower, query)
+    userDAO.update(follower, query).map {
+      result =>
+        result match {
+          case Right(b) => true
+          case Left(ex) => false
+        }
+    }
   }
 
-  override def unfollow(unfollowed: String, follower: String): Unit = {
-    userDAO.pull(follower, "following", unfollowed)
+  override def unfollow(unfollowed: String, follower: String): Future[Boolean] = {
+    userDAO.pull(follower, "following", unfollowed).map {
+      result =>
+        result match {
+          case Right(b) => true
+          case Left(ex) => false
+        }
+    }
   }
 
   override def loadUserSummary(userId: String): Future[UserSummary] = {

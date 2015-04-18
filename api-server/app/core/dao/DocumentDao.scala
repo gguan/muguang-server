@@ -3,7 +3,7 @@ package com.muguang.core.dao
 import com.muguang.core.exceptions.ServiceException
 import com.muguang.core.models.IdentifiableModel
 import play.api.libs.json._
-import reactivemongo.api.indexes.{ Index, IndexType }
+import reactivemongo.api.indexes.IndexType
 import reactivemongo.bson.{ BSONDocument, BSONObjectID }
 
 import scala.concurrent.Future
