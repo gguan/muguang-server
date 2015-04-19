@@ -122,14 +122,14 @@ class UserServiceImpl @Inject() (userDAO: UserDAO) extends UserService {
     for {
       user <- userDAO.findById(userId)
       //      countTweets <- tweetService.countTweets(user.get.identify)
-      //      countFollowers <- userDAO.countFollowers(user.get.identify)
+      countFollowers <- userDAO.countFollowers(user.get.identify)
     } yield UserSummary(user.get.identify,
       user.get.screenName,
       user.get.avatarUrl,
       user.get.biography,
       0,
       user.get.following.size,
-      0)
+      countFollowers)
   }
 
   def getUserRefreshTokenWithLoginInfo(userId: String): Future[Option[(Option[String], LoginInfo)]] = {
@@ -138,4 +138,15 @@ class UserServiceImpl @Inject() (userDAO: UserDAO) extends UserService {
     }
   }
 
+  override def getFollowers(userId: String, skip: Int, limit: Int): Future[List[User]] = {
+    userDAO.getFollowers(userId, skip, limit)
+  }
+
+  override def getFollowings(userId: String, skip: Int, limit: Int): Future[List[User]] = {
+    userDAO.findById(userId).flatMap(userOpt => userOpt match {
+      case Some(user) => userDAO.findUsersByIds(user.following, skip, limit)
+      case None => Future.successful(List())
+    })
+
+  }
 }

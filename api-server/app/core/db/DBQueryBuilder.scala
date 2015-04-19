@@ -13,7 +13,7 @@ object DBQueryBuilder {
 
   def id(objectId: BSONObjectID): JsObject = Json.obj("_id" -> objectId)
 
-  def byIds(objectIds: List[String]): JsObject = in("_id", objectIds.map(BSONObjectID(_)))
+  def byIds(objectIds: Seq[String]): JsObject = in("_id", objectIds.map(BSONObjectID(_)))
 
   def set(field: String, data: JsObject): JsObject = set(Json.obj(field -> data))
 

@@ -13,6 +13,8 @@ POST        /api/v1/refreshToken             @controllers.SocialAuthController.r
 # User API
 POST        /api/v1/user/follow/:id          @controllers.FollowController.follow(id: String)
 POST        /api/v1/user/unfollow/:id        @controllers.FollowController.unfollow(id: String)
+GET         /api/v1/user/:id/followers       @controllers.UserController.getFollowers(id: String, skip: Int = 0, limit: Int = 20)
+GET         /api/v1/user/:id/followings      @controllers.UserController.getFollowings(id: String, skip: Int = 0, limit: Int = 20)
 
 # Post API
 POST        /api/v1/post                     @controllers.PostController.createPost()

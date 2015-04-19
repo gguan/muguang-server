@@ -48,4 +48,9 @@ trait UserService extends IdentityService[User] {
   def loadUserSummary(username: String): Future[UserSummary]
 
   def getUserRefreshTokenWithLoginInfo(userId: String): Future[Option[(Option[String], LoginInfo)]]
+
+  def getFollowers(userId: String, skip: Int, limit: Int): Future[List[User]]
+
+  def getFollowings(userId: String, skip: Int, limit: Int): Future[List[User]]
+
 }

@@ -6,7 +6,6 @@ import com.muguang.core.db.DBQueryBuilder
 import models.User
 import play.api.libs.json.Json
 import reactivemongo.api.indexes.IndexType
-import reactivemongo.bson.BSONObjectID
 
 import scala.concurrent.Future
 
@@ -20,6 +19,7 @@ class UserDAOImpl extends UserDAO with BaseDocumentDao[User] {
   override def ensureIndexes: Future[List[Boolean]] = {
     for {
       usernameIndex <- ensureIndex(List(("li.pid", IndexType.Ascending), ("li.pk", IndexType.Ascending)))
+      followingIndex <- ensureIndex(List(("f", IndexType.Ascending)))
     } yield {
       List(usernameIndex)
     }
@@ -59,8 +59,12 @@ class UserDAOImpl extends UserDAO with BaseDocumentDao[User] {
     count(DBQueryBuilder.in("f", Seq(userId)))
   }
 
-  override def findUsersByIds(userIds: List[String]): Future[List[User]] = {
-    find(DBQueryBuilder.byIds(userIds))
+  def getFollowers(userId: String, skip: Int, limit: Int): Future[List[User]] = {
+    findWithOptions(DBQueryBuilder.in("f", Seq(userId)), skip, limit)
+  }
+
+  override def findUsersByIds(userIds: Seq[String], skip: Int, limit: Int): Future[List[User]] = {
+    findWithOptions(DBQueryBuilder.byIds(userIds), skip, limit)
   }
 }
 

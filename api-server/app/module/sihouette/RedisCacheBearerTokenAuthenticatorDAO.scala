@@ -1,6 +1,5 @@
 package module.sihouette
 
-import com.mohiva.play.silhouette.api.util.CacheLayer
 import com.mohiva.play.silhouette.impl.authenticators.BearerTokenAuthenticator
 import com.mohiva.play.silhouette.impl.daos.AuthenticatorDAO
 import org.joda.time.DateTime
