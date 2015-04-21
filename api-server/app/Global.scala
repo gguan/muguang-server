@@ -2,6 +2,8 @@ package app
 
 import com.google.inject.Guice
 import com.mohiva.play.silhouette.api.{ Logger, SecuredSettings }
+import models.post.PostDAOImpl
+import models.user.UserDAOImpl
 import play.api._
 import play.api.i18n.{ Lang, Messages }
 import play.api.libs.json.Json
@@ -74,6 +76,11 @@ trait Global extends GlobalSettings with SecuredSettings with Logger {
     Future.successful(InternalServerError(
       Json.obj("error" -> "400 Bad Request", "message" -> ex.getMessage)
     ))
+  }
+
+  override def onStart(app: Application) {
+    injector.getInstance(classOf[UserDAOImpl]).ensureIndexes
+    injector.getInstance(classOf[PostDAOImpl]).ensureIndexes
   }
 
 }
