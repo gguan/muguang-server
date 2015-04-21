@@ -21,4 +21,8 @@ trait PostService {
 
   def unlikePost(postId: String, user: User): Future[Boolean]
 
+  def getOneRandomPost(): Future[Option[Post]]
+
+  def searchNearbyPosts: Future[List[Post]]
+
 }

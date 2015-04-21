@@ -13,9 +13,11 @@ class PostDAOImpl extends PostDAO with BaseDocumentDao[Post] {
   override def ensureIndexes: Future[List[Boolean]] = {
     for {
       userIdIndex <- ensureIndex(List(("uid" -> IndexType.Ascending)))
-      locationIndex <- ensureIndex(List(("loc" -> IndexType.Geo2DSpherical)))
+      locationIndex <- ensureIndex(List(("loc.geometry.coordinates" -> IndexType.Geo2DSpherical)))
     } yield {
-      List(userIdIndex, locationIndex)
+      val l = List(userIdIndex, locationIndex)
+      println(l)
+      l
     }
   }
 

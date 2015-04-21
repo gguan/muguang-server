@@ -5,14 +5,12 @@ import com.mohiva.play.silhouette.api.services._
 import com.mohiva.play.silhouette.api.util._
 import com.mohiva.play.silhouette.api.{ Environment, EventBus }
 import com.mohiva.play.silhouette.impl.authenticators._
-import com.mohiva.play.silhouette.impl.daos.DelegableAuthInfoDAO
 import com.mohiva.play.silhouette.impl.providers._
 import com.mohiva.play.silhouette.impl.providers.oauth2._
 import com.mohiva.play.silhouette.impl.providers.oauth2.state.{ CookieStateProvider, CookieStateSettings }
 import com.mohiva.play.silhouette.impl.services._
 import com.mohiva.play.silhouette.impl.util._
 import models.User
-import models.daos._
 import models.user._
 import models.post._
 import net.codingwell.scalaguice.ScalaModule
@@ -31,10 +29,9 @@ class SilhouetteModule extends AbstractModule with ScalaModule {
    */
   def configure() {
     bind[UserService].to[UserServiceImpl]
-    bind[UserDAO].to[UserDAOImpl]
+    bind[UserDAO].toInstance(new UserDAOImpl())
     bind[PostService].to[PostServiceImpl]
-    bind[PostDAO].to[PostDAOImpl]
-    bind[DelegableAuthInfoDAO[OAuth2Info]].to[OAuth2InfoDAO]
+    bind[PostDAO].toInstance(new PostDAOImpl())
     bind[HTTPLayer].to[PlayHTTPLayer]
     bind[IDGenerator].toInstance(new SecureRandomIDGenerator(32))
     bind[FingerprintGenerator].toInstance(new DefaultFingerprintGenerator(false))
@@ -86,19 +83,6 @@ class SilhouetteModule extends AbstractModule with ScalaModule {
       authenticatorIdleTimeout = None,
       authenticatorExpiry = Play.configuration.getInt("silhouette.authenticator.authenticatorExpiry").get
     ), new RedisCacheBearerTokenAuthenticatorDAO(new RedisCacheLayer()), idGenerator, Clock())
-  }
-
-  /**
-   * Provides the auth info service.
-   *
-   * @param oauth2InfoDAO The implementation of the delegable OAuth2 auth info DAO.
-   * @return The auth info service instance.
-   */
-  @Provides
-  def provideAuthInfoService(
-    oauth2InfoDAO: DelegableAuthInfoDAO[OAuth2Info]): AuthInfoService = {
-
-    new DelegableAuthInfoService(oauth2InfoDAO)
   }
 
   /**

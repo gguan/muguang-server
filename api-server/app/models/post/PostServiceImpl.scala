@@ -12,6 +12,7 @@ import reactivemongo.bson.BSONObjectID
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.Random
 
 class PostServiceImpl @Inject() (postDAO: PostDAO) extends PostService {
 
@@ -131,4 +132,15 @@ class PostServiceImpl @Inject() (postDAO: PostDAO) extends PostService {
         }
     }
   }
+
+  override def getOneRandomPost(): Future[Option[Post]] = {
+    postDAO.count(Json.obj()).flatMap { number =>
+      postDAO.findWithOptions(Json.obj(), Random.nextInt(number), 1).map(_.headOption)
+    }
+  }
+
+  override def searchNearbyPosts: Future[List[Post]] = {
+    Future.successful(List())
+  }
+
 }

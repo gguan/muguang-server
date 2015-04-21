@@ -21,6 +21,7 @@ POST        /api/v1/post                     @controllers.PostController.createP
 DELETE      /api/v1/post/:id                 @controllers.PostController.deletePost(id: String)
 POST        /api/v1/post/:id/comment         @controllers.PostController.commentPost(id: String)
 DELETE      /api/v1/post/:pid/comment/:cid   @controllers.PostController.deleteComment(pid: String, cid: String)
+GET         /api/v1/post/random              @controllers.PostController.getOneRandomPost()
 
 
 # Map static resources from the /public folder to the /assets URL path

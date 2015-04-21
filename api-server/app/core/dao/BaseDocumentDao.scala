@@ -133,7 +133,7 @@ trait BaseDocumentDao[M <: IdentifiableModel] extends BaseDao with DocumentDao[M
     version: Option[Int] = None,
     options: BSONDocument = BSONDocument()) = {
     val index = Index(key, name, unique, background, dropDups, sparse, version, options)
-    Logger.info(s"Ensuring index: $index")
+    Logger.info(s"Collection[$collectionName] ensuring index: $index")
     collection.indexesManager.ensure(index)
   }
 }
