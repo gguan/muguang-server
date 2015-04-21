@@ -5,7 +5,7 @@ import javax.inject.Inject
 import com.mohiva.play.silhouette.api.{ Environment, Logger, Silhouette }
 import com.mohiva.play.silhouette.impl.authenticators.BearerTokenAuthenticator
 import models.post.PostService
-import models.{ Comment, CreatePostCommand, User }
+import models.{PostEmotion, Comment, CreatePostCommand, User}
 import org.joda.time.DateTime
 import play.api.libs.json.Json
 import play.extras.geojson._
@@ -43,7 +43,7 @@ class PostController @Inject() (
 
     val comment = Comment(BSONObjectID.generate, request.identity._id, replyTo, body, DateTime.now, location)
 
-    postService.addComment(postId, comment).map(result => Ok)
+    postService.commentPost(postId, comment).map(result => Ok)
   }
 
   def deleteComment(postId: String, commentId: String) = SecuredAction.async { implicit request =>
@@ -51,6 +51,20 @@ class PostController @Inject() (
       if (result) Ok
       else BadRequest
     }
+  }
+
+  def likePost(postId: String) = SecuredAction.async(parse.json) { implicit request =>
+
+    val code = (request.body \ "code").as[String]
+
+    val emotion = PostEmotion(request.identity._id, code)
+
+    postService.likePost(postId, emotion).map(result => Ok)
+  }
+
+  def unlikePost(postId: String) = SecuredAction.async(parse.json) { implicit request =>
+
+    postService.unlikePost(postId, request.identity).map(result => Ok)
   }
 
 }

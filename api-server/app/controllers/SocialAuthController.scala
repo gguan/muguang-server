@@ -42,8 +42,6 @@ class SocialAuthController @Inject() (
             profile <- p.retrieveProfile(authInfo)
             // Create new account if user not exists
             user <- userService.save(profile)
-            // !!! We don't need to store oauth info in back store, enable it when we need to link user account
-            // authInfo <- authInfoService.save(profile.loginInfo, authInfo)
             // Create client access token
             authenticator <- env.authenticatorService.create(user.loginInfo)
             value <- env.authenticatorService.init(authenticator)
@@ -80,8 +78,6 @@ class SocialAuthController @Inject() (
               profile <- p.retrieveProfile(authInfoWithId)
               // Create new account if user not exists
               user <- userService.save(profile)
-              // !!! We don't need to store oauth info in back store, enable it when we need to link user account
-              // authInfo <- authInfoService.save(profile.loginInfo, authInfo)
               // Create client access token
               authenticator <- env.authenticatorService.create(user.loginInfo)
               value <- env.authenticatorService.init(authenticator)
