@@ -5,10 +5,11 @@ import javax.inject.Inject
 import com.muguang.core.exceptions.ResourceNotFoundException
 import com.muguang.util.ExtractUtils
 import models._
-import play.api.libs.json.Json
+import play.api.libs.json.{ JsObject, Json }
+import play.extras.geojson.LatLng
 import play.modules.reactivemongo.json.BSONFormats._
 
-import reactivemongo.bson.BSONObjectID
+import reactivemongo.bson.{ BSONArray, BSONDocument, BSONObjectID }
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -139,8 +140,31 @@ class PostServiceImpl @Inject() (postDAO: PostDAO) extends PostService {
     }
   }
 
-  override def searchNearbyPosts: Future[List[Post]] = {
-    Future.successful(List())
+  def searchNearbyPosts(latLng: LatLng, maxDistance: Option[Int] = None, minDistance: Option[Int] = None, query: Option[JsObject] = None): Future[List[PostDistanceResult]] = {
+    import play.modules.reactivemongo.json.BSONFormats._
+
+    val command = BSONDocument(
+      "geoNear" -> postDAO.getCollectionName(),
+      "near" -> BSONDocument(
+        "type" -> "Point",
+        "coordinates" -> BSONArray(latLng.lng, latLng.lat)
+      ),
+      "spherical" -> true
+    ) ++ (maxDistance match {
+        case Some(max) => BSONDocument("maxDistance" -> max)
+        case None => BSONDocument()
+      }) ++ (minDistance match {
+        case Some(min) => BSONDocument("minDistance" -> min)
+        case None => BSONDocument()
+      }) ++ (query match {
+        case Some(q) => BSONDocument("query" -> q.as[BSONDocument])
+        case None => BSONDocument()
+      })
+
+    postDAO.runCommand(command).map { doc =>
+      (Json.toJson(doc) \ "results").as[List[PostDistanceResult]]
+    }
+
   }
 
 }

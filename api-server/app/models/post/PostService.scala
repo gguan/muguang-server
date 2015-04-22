@@ -1,7 +1,8 @@
 package models.post
 
 import models._
-import reactivemongo.bson.BSONObjectID
+import play.api.libs.json.JsObject
+import play.extras.geojson.LatLng
 
 import scala.concurrent.Future
 
@@ -23,6 +24,6 @@ trait PostService {
 
   def getOneRandomPost(): Future[Option[Post]]
 
-  def searchNearbyPosts: Future[List[Post]]
+  def searchNearbyPosts(latLng: LatLng, maxDistance: Option[Int] = None, minDistance: Option[Int] = None, query: Option[JsObject] = None): Future[List[PostDistanceResult]]
 
 }

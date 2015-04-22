@@ -5,9 +5,9 @@ import javax.inject.Inject
 import com.mohiva.play.silhouette.api.{ Environment, Logger, Silhouette }
 import com.mohiva.play.silhouette.impl.authenticators.BearerTokenAuthenticator
 import models.post.PostService
-import models.{ PostEmotion, Comment, CreatePostCommand, User }
+import models._
 import org.joda.time.DateTime
-import play.api.libs.json.Json
+import play.api.libs.json.{ JsObject, Json }
 import play.api.mvc.Action
 import play.extras.geojson._
 import reactivemongo.bson.BSONObjectID
@@ -71,6 +71,18 @@ class PostController @Inject() (
   def getOneRandomPost() = Action.async { implicit request =>
 
     postService.getOneRandomPost().map(p => Ok(Json.toJson(p)))
+  }
+
+  def searchNearbyPosts() = Action.async(parse.json) { implicit request =>
+    val latLng = (request.body \ "coordinates").as[LatLng]
+    val maxDistance = (request.body \ "max_distance").asOpt[Int]
+    val minDistance = (request.body \ "min_distance").asOpt[Int]
+    val query = (request.body \ "query").asOpt[JsObject]
+
+    postService.searchNearbyPosts(latLng, maxDistance, minDistance, query).map { list =>
+      list.foreach(p => println(Json.toJson(p)))
+      Ok(Json.toJson(list))
+    }
   }
 
 }

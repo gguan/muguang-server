@@ -22,7 +22,7 @@ DELETE      /api/v1/post/:id                 @controllers.PostController.deleteP
 POST        /api/v1/post/:id/comment         @controllers.PostController.commentPost(id: String)
 DELETE      /api/v1/post/:pid/comment/:cid   @controllers.PostController.deleteComment(pid: String, cid: String)
 GET         /api/v1/post/random              @controllers.PostController.getOneRandomPost()
-
+POST        /api/v1/post/nearby              @controllers.PostController.searchNearbyPosts()
 
 # Map static resources from the /public folder to the /assets URL path
 GET         /assets/*file                    controllers.Assets.at(path="/public", file)
