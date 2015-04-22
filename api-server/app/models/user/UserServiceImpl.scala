@@ -5,7 +5,8 @@ import javax.inject.Inject
 import com.mohiva.play.silhouette.api.LoginInfo
 import com.mohiva.play.silhouette.impl.providers.CommonSocialProfile
 import com.muguang.util.RandomUtils
-import models.{ UserSummary, User }
+import models.{ RefreshToken, UserSummary, User }
+import org.joda.time.DateTime
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Json
 import reactivemongo.bson.BSONObjectID
@@ -48,7 +49,7 @@ class UserServiceImpl @Inject() (userDAO: UserDAO) extends UserService {
     userDAO.find(profile.loginInfo).flatMap {
       case Some(user) =>
         // Not update if find user with profile, only update refresh_token
-        userDAO.update(user.identify, user.copy(refreshToken = Some(RandomUtils.generateToken())))
+        userDAO.update(user.identify, user.copy(refreshToken = Some(RefreshToken(RandomUtils.generateToken(), DateTime.now().plusDays(30)))))
           .map(result => result match {
             case Left(ex) => throw ex
             case Right(u) => u
@@ -57,7 +58,7 @@ class UserServiceImpl @Inject() (userDAO: UserDAO) extends UserService {
         userDAO.save(User(
           _id = BSONObjectID.generate,
           loginInfo = profile.loginInfo,
-          refreshToken = Some(RandomUtils.generateToken()),
+          refreshToken = Some(RefreshToken(RandomUtils.generateToken(), DateTime.now().plusDays(30))),
           screenName = profile.firstName + "_" + profile.lastName,
           email = profile.email,
           avatarUrl = profile.avatarURL
@@ -77,7 +78,7 @@ class UserServiceImpl @Inject() (userDAO: UserDAO) extends UserService {
     userDAO.find(profile.loginInfo).flatMap {
       case Some(user) =>
         // Not update if find user with profile, only update refresh_token
-        userDAO.update(user.identify, user.copy(refreshToken = Some(RandomUtils.generateToken())))
+        userDAO.update(user.identify, user.copy(refreshToken = Some(RefreshToken(RandomUtils.generateToken(), DateTime.now().plusDays(30)))))
           .map(result => result match {
             case Left(ex) => throw ex
             case Right(u) => u
@@ -86,7 +87,7 @@ class UserServiceImpl @Inject() (userDAO: UserDAO) extends UserService {
         userDAO.save(User(
           _id = BSONObjectID.generate,
           loginInfo = profile.loginInfo,
-          refreshToken = Some(RandomUtils.generateToken()),
+          refreshToken = Some(RefreshToken(RandomUtils.generateToken(), DateTime.now().plusDays(30))),
           screenName = profile.screenName,
           email = profile.email,
           biography = profile.biography,
@@ -132,7 +133,7 @@ class UserServiceImpl @Inject() (userDAO: UserDAO) extends UserService {
       countFollowers)
   }
 
-  def getUserRefreshTokenWithLoginInfo(userId: String): Future[Option[(Option[String], LoginInfo)]] = {
+  def getUserRefreshTokenWithLoginInfo(userId: String): Future[Option[(Option[RefreshToken], LoginInfo)]] = {
     userDAO.findById(userId).map { userOpt =>
       userOpt.map(user => (user.refreshToken, user.loginInfo))
     }

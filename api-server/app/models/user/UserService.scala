@@ -3,7 +3,7 @@ package models.user
 import com.mohiva.play.silhouette.api.LoginInfo
 import com.mohiva.play.silhouette.api.services.IdentityService
 import com.mohiva.play.silhouette.impl.providers.CommonSocialProfile
-import models.{ UserSummary, User }
+import models.{ RefreshToken, UserSummary, User }
 import module.sihouette.WeiboProfile
 
 import scala.concurrent.Future
@@ -47,7 +47,7 @@ trait UserService extends IdentityService[User] {
 
   def loadUserSummary(username: String): Future[UserSummary]
 
-  def getUserRefreshTokenWithLoginInfo(userId: String): Future[Option[(Option[String], LoginInfo)]]
+  def getUserRefreshTokenWithLoginInfo(userId: String): Future[Option[(Option[RefreshToken], LoginInfo)]]
 
   def getFollowers(userId: String, skip: Int, limit: Int): Future[List[User]]
 

@@ -86,7 +86,7 @@ class SocialAuthController @Inject() (
                   "uid" -> id,
                   "access_token" -> value,
                   "expires_in" -> (DateTime.now to authenticator.expirationDate).millis / 1000,
-                  "refresh_token" -> user.refreshToken
+                  "refresh_token" -> user.refreshToken.map(_.token).getOrElse(null)
                 ))
               ))
             } yield {
@@ -115,8 +115,8 @@ class SocialAuthController @Inject() (
     (idOpt, rtOpt) match {
       case (Some(id), Some(refreshToken)) => {
         userService.getUserRefreshTokenWithLoginInfo(id).flatMap(t => t match {
-          case Some((Some(tokenOpt), loginInfo)) => {
-            if (tokenOpt == refreshToken) {
+          case Some((Some(token), loginInfo)) => {
+            if (token.isValid && token.token == refreshToken) {
               for {
                 authenticator <- env.authenticatorService.create(loginInfo)
                 value <- env.authenticatorService.init(authenticator)
