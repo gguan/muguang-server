@@ -4,7 +4,7 @@ import javax.inject.Inject
 
 import com.mohiva.play.silhouette.api._
 import com.mohiva.play.silhouette.api.exceptions.ProviderException
-import com.mohiva.play.silhouette.impl.authenticators.BearerTokenAuthenticator
+import com.mohiva.play.silhouette.impl.authenticators.JWTAuthenticator
 import com.mohiva.play.silhouette.impl.providers._
 import com.github.nscala_time.time.Imports._
 import models.User
@@ -23,8 +23,8 @@ import scala.concurrent.Future
  * @param env The Silhouette environment.
  */
 class SocialAuthController @Inject() (
-  val env: Environment[User, BearerTokenAuthenticator],
-  val userService: UserService) extends Silhouette[User, BearerTokenAuthenticator] with Logger {
+  val env: Environment[User, JWTAuthenticator],
+  val userService: UserService) extends Silhouette[User, JWTAuthenticator] with Logger {
 
   /**
    * Authenticates a user against a social provider.

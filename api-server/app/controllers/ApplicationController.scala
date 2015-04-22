@@ -2,14 +2,11 @@ package controllers
 
 import javax.inject.Inject
 
-import com.mohiva.play.silhouette.api.{ LoginInfo, Environment, LogoutEvent, Silhouette }
-import com.mohiva.play.silhouette.impl.authenticators.BearerTokenAuthenticator
+import com.mohiva.play.silhouette.api.{ Environment, LogoutEvent, Silhouette }
+import com.mohiva.play.silhouette.impl.authenticators.JWTAuthenticator
 import models.User
 import models.user.UserService
-import play.api.libs.json.Json
 import play.api.mvc.Action
-import reactivemongo.bson.BSONObjectID
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 /**
@@ -18,8 +15,8 @@ import scala.concurrent.Future
  * @param env The Silhouette environment.
  */
 class ApplicationController @Inject() (
-  implicit val env: Environment[User, BearerTokenAuthenticator],
-  val userService: UserService) extends Silhouette[User, BearerTokenAuthenticator] {
+  implicit val env: Environment[User, JWTAuthenticator],
+  val userService: UserService) extends Silhouette[User, JWTAuthenticator] {
 
   /**
    * Handles the index action.

@@ -1,30 +1,33 @@
 package module.sihouette
 
+import com.mohiva.play.silhouette.api.util.CacheLayer
 import play.api.Play
 import play.api.Play.current
-import redis.clients.jedis.Jedis
+import scalacache._
+import redis._
 
+import scala.concurrent.duration._
 import scala.concurrent.Future
+import scala.reflect.ClassTag
 
-class RedisCacheLayer {
+import scala.concurrent.ExecutionContext.Implicits.global
+
+class RedisCacheLayer extends CacheLayer {
 
   val host = Play.application.configuration.getString("redis.host").get
   val port = Play.application.configuration.getInt("redis.port").get
 
-  val jedis = new Jedis(host, port)
+  implicit val scalaCache = ScalaCache(RedisCache(host, port))
 
-  def save(key: String, value: String, expiration: Int): Future[String] = {
-    jedis.setex(key, expiration, value.toString)
-    Future.successful(value)
+  println("Initializing redis cache layer...")
+
+  override def save[T](key: String, value: T, expiration: Int): Future[T] = {
+    put[T](key)(value, ttl = Some(expiration.seconds)).map(_ => value)
   }
 
-  def remove(key: String): Future[Unit] = {
-    jedis.del(key)
-    Future.successful((): Unit)
-  }
+  override def remove(key: String): Future[Unit] = remove(key)
 
-  def find(key: String): Future[Option[String]] = {
-    Future.successful(Option(jedis.get(key)))
-  }
+  override def find[T: ClassTag](key: String): Future[Option[T]] = get[T](key)
 
 }
+

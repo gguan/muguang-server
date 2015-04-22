@@ -5,6 +5,7 @@ import com.mohiva.play.silhouette.api.services._
 import com.mohiva.play.silhouette.api.util._
 import com.mohiva.play.silhouette.api.{ Environment, EventBus }
 import com.mohiva.play.silhouette.impl.authenticators._
+import com.mohiva.play.silhouette.impl.daos.CacheAuthenticatorDAO
 import com.mohiva.play.silhouette.impl.providers._
 import com.mohiva.play.silhouette.impl.providers.oauth2._
 import com.mohiva.play.silhouette.impl.providers.oauth2.state.{ CookieStateProvider, CookieStateSettings }
@@ -16,7 +17,7 @@ import models.post._
 import net.codingwell.scalaguice.ScalaModule
 import play.api.Play
 import play.api.Play.current
-import module.sihouette.{ RedisCacheBearerTokenAuthenticatorDAO, RedisCacheLayer, WeiboProvider }
+import module.sihouette.{ RedisCacheLayer, WeiboProvider }
 import scala.collection.immutable.ListMap
 
 /**
@@ -32,6 +33,7 @@ class SilhouetteModule extends AbstractModule with ScalaModule {
     bind[UserDAO].toInstance(new UserDAOImpl())
     bind[PostService].to[PostServiceImpl]
     bind[PostDAO].toInstance(new PostDAOImpl())
+    bind[CacheLayer].to[RedisCacheLayer]
     bind[HTTPLayer].to[PlayHTTPLayer]
     bind[IDGenerator].toInstance(new SecureRandomIDGenerator(32))
     bind[FingerprintGenerator].toInstance(new DefaultFingerprintGenerator(false))
@@ -51,12 +53,12 @@ class SilhouetteModule extends AbstractModule with ScalaModule {
   @Provides
   def provideEnvironment(
     userService: UserService,
-    authenticatorService: AuthenticatorService[BearerTokenAuthenticator],
+    authenticatorService: AuthenticatorService[JWTAuthenticator],
     eventBus: EventBus,
     facebookProvider: FacebookProvider,
-    weiboProvider: WeiboProvider): Environment[User, BearerTokenAuthenticator] = {
+    weiboProvider: WeiboProvider): Environment[User, JWTAuthenticator] = {
 
-    Environment[User, BearerTokenAuthenticator](
+    Environment[User, JWTAuthenticator](
       userService,
       authenticatorService,
       ListMap(
@@ -75,14 +77,17 @@ class SilhouetteModule extends AbstractModule with ScalaModule {
    */
   @Provides
   def provideAuthenticatorService(
+    cacheLayer: CacheLayer,
     idGenerator: IDGenerator,
-    fingerprintGenerator: FingerprintGenerator): AuthenticatorService[BearerTokenAuthenticator] = {
+    fingerprintGenerator: FingerprintGenerator): AuthenticatorService[JWTAuthenticator] = {
 
-    new BearerTokenAuthenticatorService(BearerTokenAuthenticatorSettings(
+    new JWTAuthenticatorService(JWTAuthenticatorSettings(
       headerName = Play.configuration.getString("silhouette.authenticator.headerName").get,
-      authenticatorIdleTimeout = None,
-      authenticatorExpiry = Play.configuration.getInt("silhouette.authenticator.authenticatorExpiry").get
-    ), new RedisCacheBearerTokenAuthenticatorDAO(new RedisCacheLayer()), idGenerator, Clock())
+      issuerClaim = Play.configuration.getString("silhouette.authenticator.issuerClaim").get,
+      encryptSubject = Play.configuration.getBoolean("silhouette.authenticator.encryptSubject").get,
+      authenticatorExpiry = Play.configuration.getInt("silhouette.authenticator.authenticatorExpiry").get,
+      sharedSecret = Play.configuration.getString("application.secret").get
+    ), Some(new CacheAuthenticatorDAO[JWTAuthenticator](cacheLayer)), idGenerator, Clock())
   }
 
   /**

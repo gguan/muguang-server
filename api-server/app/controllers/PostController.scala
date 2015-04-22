@@ -3,7 +3,7 @@ package controllers
 import javax.inject.Inject
 
 import com.mohiva.play.silhouette.api.{ Environment, Logger, Silhouette }
-import com.mohiva.play.silhouette.impl.authenticators.BearerTokenAuthenticator
+import com.mohiva.play.silhouette.impl.authenticators.JWTAuthenticator
 import models.post.PostService
 import models._
 import org.joda.time.DateTime
@@ -16,8 +16,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class PostController @Inject() (
-  val env: Environment[User, BearerTokenAuthenticator],
-  val postService: PostService) extends Silhouette[User, BearerTokenAuthenticator] with Logger {
+  val env: Environment[User, JWTAuthenticator],
+  val postService: PostService) extends Silhouette[User, JWTAuthenticator] with Logger {
 
   def createPost() = SecuredAction.async(parse.json) { implicit request =>
     request.body.validate[CreatePostCommand].asOpt match {
