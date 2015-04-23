@@ -32,7 +32,7 @@ class SocialAuthController @Inject() (
    * @param provider The ID of the provider to authenticate against.
    * @return The result to display.
    */
-  def authenticate(provider: String) = Action.async { implicit request =>
+  def authenticateByWeb(provider: String) = Action.async { implicit request =>
     (env.providers.get(provider) match {
       case Some(p: SocialProvider with CommonSocialProfileBuilder) =>
         p.authenticate().flatMap {
@@ -44,6 +44,7 @@ class SocialAuthController @Inject() (
             user <- userService.save(profile)
             // Create client access token
             authenticator <- env.authenticatorService.create(user.loginInfo)
+            // Cache access token
             value <- env.authenticatorService.init(authenticator)
             result <- env.authenticatorService.embed(value, Future.successful(
               Ok("authenticate successfully.")
@@ -61,7 +62,7 @@ class SocialAuthController @Inject() (
     }
   }
 
-  def verifySocialAuth(provider: String) = Action.async(parse.json) { implicit request =>
+  def authenticate(provider: String) = Action.async(parse.json) { implicit request =>
 
     val idOpt = (request.body \ "uid").asOpt[String]
     val authInfoOpt = (request.body \ "oauth2_info").asOpt[OAuth2Info]
@@ -80,6 +81,7 @@ class SocialAuthController @Inject() (
               user <- userService.save(profile)
               // Create client access token
               authenticator <- env.authenticatorService.create(user.loginInfo)
+              // Cache access token
               value <- env.authenticatorService.init(authenticator)
               result <- env.authenticatorService.embed(value, Future.successful(
                 Ok(Json.obj(

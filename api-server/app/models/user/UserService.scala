@@ -45,12 +45,12 @@ trait UserService extends IdentityService[User] {
 
   def unfollow(unfollowed: String, follower: String): Future[Boolean]
 
-  def loadUserSummary(username: String): Future[UserSummary]
+  def loadUserSummary(username: String): Future[Option[UserSummary]]
 
   def getUserRefreshTokenWithLoginInfo(userId: String): Future[Option[(Option[RefreshToken], LoginInfo)]]
 
-  def getFollowers(userId: String, skip: Int, limit: Int): Future[List[User]]
+  def getFollowers(userId: String, skip: Int, limit: Int): Future[List[UserSummary]]
 
-  def getFollowings(userId: String, skip: Int, limit: Int): Future[List[User]]
+  def getFollowings(userId: String, skip: Int, limit: Int): Future[List[UserSummary]]
 
 }

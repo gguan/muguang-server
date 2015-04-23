@@ -1,6 +1,6 @@
 package module.di
 
-import com.google.inject.{ AbstractModule, Provides }
+import com.google.inject.{ AbstractModule, Provides, Singleton }
 import com.mohiva.play.silhouette.api.services._
 import com.mohiva.play.silhouette.api.util._
 import com.mohiva.play.silhouette.api.{ Environment, EventBus }
@@ -50,7 +50,7 @@ class SilhouetteModule extends AbstractModule with ScalaModule {
    * @param weiboProvider The Weibo provider implementation.
    * @return The Silhouette environment.
    */
-  @Provides
+  @Provides @Singleton
   def provideEnvironment(
     userService: UserService,
     authenticatorService: AuthenticatorService[JWTAuthenticator],
