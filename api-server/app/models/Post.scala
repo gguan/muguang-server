@@ -9,7 +9,7 @@ import reactivemongo.bson.BSONObjectID
 
 case class Post(
   override var _id: BSONObjectID,
-  userId: BSONObjectID,
+  userId: String,
   `type`: String,
   photos: Seq[PostPhoto],
   status: Option[String],
@@ -27,7 +27,7 @@ object Post {
 
   implicit val postFormat: Format[Post] = (
     (JsPath \ "_id").format[BSONObjectID] and
-    (JsPath \ "uid").format[BSONObjectID] and
+    (JsPath \ "uid").format[String] and
     (JsPath \ "t").format[String] and
     (JsPath \ "pt").format[Seq[PostPhoto]] and
     (JsPath \ "s").formatNullable[String] and
