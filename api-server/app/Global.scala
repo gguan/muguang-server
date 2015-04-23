@@ -79,6 +79,19 @@ trait Global extends GlobalSettings with SecuredSettings with Logger {
   }
 
   override def onStart(app: Application) {
+
+    println(
+      """
+        | __  __            _____
+        ||  \/  |          / ____|
+        || \  / |  _   _  | |  __   _   _    __ _   _ __     __ _
+        || |\/| | | | | | | | |_ | | | | |  / _` | | '_ \   / _` |
+        || |  | | | |_| | | |__| | | |_| | | (_| | | | | | | (_| |  _   _   _
+        ||_|  |_|  \__,_|  \_____|  \__,_|  \__,_| |_| |_|  \__, | (_) (_) (_)
+        |                                                    __/ |
+        |                                                   |___/
+      """.stripMargin)
+
     injector.getInstance(classOf[UserDAOImpl]).ensureIndexes
     injector.getInstance(classOf[PostDAOImpl]).ensureIndexes
   }
