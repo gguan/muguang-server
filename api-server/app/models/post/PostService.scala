@@ -14,6 +14,10 @@ trait PostService {
 
   def createPost(postCommand: CreatePostCommand, user: User): Post
 
+  def countPostByUserId(userId: String): Future[Int]
+
+  def getRecentPostsByUserId(userId: String, skip: Int, limit: Int): Future[List[PostSummary]]
+
   def commentPost(postId: String, comment: Comment): Future[Comment]
 
   def deleteCommentByUser(postId: String, commentId: String, user: User): Future[Boolean]
@@ -22,7 +26,7 @@ trait PostService {
 
   def unlikePost(postId: String, user: User): Future[Boolean]
 
-  def getOneRandomPost(): Future[Option[Post]]
+  def getOneRandomPost: Future[Option[Post]]
 
   def searchNearbyPosts(latLng: LatLng, maxDistance: Option[Int] = None, minDistance: Option[Int] = None, query: Option[JsObject] = None): Future[List[PostDistanceResult]]
 

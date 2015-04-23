@@ -4,10 +4,11 @@ import javax.inject.Inject
 
 import com.mohiva.play.silhouette.api.{ Environment, Logger, Silhouette }
 import com.mohiva.play.silhouette.impl.authenticators.JWTAuthenticator
+import com.muguang.core.helpers.ObjectIdJsonFormats
 import models.post.PostService
 import models._
 import org.joda.time.DateTime
-import play.api.libs.json.{ JsObject, Json }
+import play.api.libs.json._
 import play.api.mvc.Action
 import play.extras.geojson._
 import reactivemongo.bson.BSONObjectID
@@ -69,8 +70,7 @@ class PostController @Inject() (
   }
 
   def getOneRandomPost() = Action.async { implicit request =>
-
-    postService.getOneRandomPost().map(p => Ok(Json.toJson(p)))
+    postService.getOneRandomPost.map(p => Ok(Json.toJson(p)))
   }
 
   def searchNearbyPosts() = Action.async(parse.json) { implicit request =>

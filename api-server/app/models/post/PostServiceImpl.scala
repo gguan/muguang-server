@@ -49,7 +49,7 @@ class PostServiceImpl @Inject() (postDAO: PostDAO) extends PostService {
   override def createPost(postCommand: CreatePostCommand, user: User): Post = {
     Post(
       BSONObjectID.generate,
-      user._id,
+      user._id.stringify,
       postCommand.`type`,
       postCommand.photos,
       postCommand.status,
@@ -57,6 +57,20 @@ class PostServiceImpl @Inject() (postDAO: PostDAO) extends PostService {
       altitude = postCommand.altitude,
       hashtags = ExtractUtils.extractHashtags(postCommand.status.getOrElse(""))
     )
+  }
+
+  def countPostByUserId(userId: String): Future[Int] = {
+    postDAO.count(Json.obj("uid" -> userId))
+  }
+
+  def getRecentPostsByUserId(userId: String, skip: Int, limit: Int): Future[List[PostSummary]] = {
+    val query = Json.obj(
+      "$query" -> Json.obj("uid" -> userId),
+      "$orderby" -> Json.obj("ct" -> -1)
+    )
+    postDAO.findWithOptions(query, skip, limit).map { list =>
+      list.map(p => PostSummary(p._id.stringify, p.photos.headOption.map(_.thumbnail).getOrElse(""), p.photos.size))
+    }
   }
 
   override def commentPost(postId: String, comment: Comment): Future[Comment] = {
@@ -99,21 +113,19 @@ class PostServiceImpl @Inject() (postDAO: PostDAO) extends PostService {
       case Some(post) => {
         if (post.emotions.exists(_.userId == emotion.userId)) {
           val query = Json.obj("$set" -> Json.obj("em.$" -> Json.toJson(emotion)))
-          postDAO.update(postId, query).map {
-            result =>
-              result match {
-                case Right(b) => emotion
-                case Left(ex) => throw ex
-              }
+          postDAO.update(postId, query).map { result =>
+            result match {
+              case Right(b) => emotion
+              case Left(ex) => throw ex
+            }
           }
         } else {
           val query = Json.obj("$pull" -> Json.obj("em" -> Json.toJson(emotion)))
-          postDAO.update(postId, query).map {
-            result =>
-              result match {
-                case Right(b) => emotion
-                case Left(ex) => throw ex
-              }
+          postDAO.update(postId, query).map { result =>
+            result match {
+              case Right(b) => emotion
+              case Left(ex) => throw ex
+            }
           }
         }
       }
@@ -125,16 +137,15 @@ class PostServiceImpl @Inject() (postDAO: PostDAO) extends PostService {
     val query = Json.obj("$pull" ->
       Json.obj("em" -> Json.obj("u" -> Json.toJson(user._id)))
     )
-    postDAO.update(postId, query).map {
-      result =>
-        result match {
-          case Right(b) => true
-          case Left(ex) => throw ex
-        }
+    postDAO.update(postId, query).map { result =>
+      result match {
+        case Right(b) => true
+        case Left(ex) => throw ex
+      }
     }
   }
 
-  override def getOneRandomPost(): Future[Option[Post]] = {
+  override def getOneRandomPost: Future[Option[Post]] = {
     postDAO.count(Json.obj()).flatMap { number =>
       postDAO.findWithOptions(Json.obj(), Random.nextInt(number), 1).map(_.headOption)
     }
