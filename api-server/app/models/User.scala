@@ -20,9 +20,9 @@ case class User(
   location: Option[String] = None,
   gender: Option[String] = None,
   avatarUrl: Option[String] = None,
-  following: Seq[String] = Seq(),
-  followingCounts: Int = 0,
-  followerCounts: Int = 0) extends Identity with IdentifiableModel
+  postsCount: Int = 0,
+  followingCount: Int = 0,
+  followersCount: Int = 0) extends Identity with IdentifiableModel
 
 object User {
   import play.modules.reactivemongo.json.BSONFormats._
@@ -36,17 +36,17 @@ object User {
     (JsPath \ "_id").format[BSONObjectID] and
     (JsPath \ "li").format[LoginInfo] and
     (JsPath \ "sn").format[String] and
-    (JsPath \ "rt").formatNullable[RefreshToken] and
-    (JsPath \ "p").formatNullable[String] and
+    (JsPath \ "rtk").formatNullable[RefreshToken] and
+    (JsPath \ "pho").formatNullable[String] and
     (JsPath \ "e").formatNullable[String] and
     (JsPath \ "ct").format[DateTime] and
-    (JsPath \ "b").formatNullable[String] and
-    (JsPath \ "l").formatNullable[String] and
-    (JsPath \ "g").formatNullable[String] and
-    (JsPath \ "a").formatNullable[String] and
-    (JsPath \ "f").format[Seq[String]] and
-    (JsPath \ "fwc").format[Int] and
-    (JsPath \ "frc").format[Int]
+    (JsPath \ "bio").formatNullable[String] and
+    (JsPath \ "loc").formatNullable[String] and
+    (JsPath \ "gen").formatNullable[String] and
+    (JsPath \ "avt").formatNullable[String] and
+    (JsPath \ "_cp").format[Int] and
+    (JsPath \ "_cfg").format[Int] and
+    (JsPath \ "_cfr").format[Int]
   )(User.apply, unlift(User.unapply))
 
 }

@@ -14,6 +14,13 @@ import scala.concurrent.Future
 trait UserService extends IdentityService[User] {
 
   /**
+   * Find a user by userId
+   * @param userId the id of the target user
+   * @return the user object for the user with provided id if one exists
+   */
+  def retrieve(userId: String): Future[Option[User]]
+
+  /**
    * Saves a user.
    * @param user The user to save.
    * @return The saved user.
@@ -37,19 +44,12 @@ trait UserService extends IdentityService[User] {
   def save(profile: WeiboProfile): Future[User]
 
   /**
-   * Find a user by userId
-   * @param userId the id of the target user
-   * @return the user object for the user with provided id if one exists
-   */
-  def getUserById(userId: String): Future[User]
-
-  /**
    * Check a user ID refers to a valid user
    * @param userId the target userId. If the user
    * is invalid, a service exception is thrown.
    * @return
    */
-  def validateUser(userId: String): Future[Unit]
+  def validateUser(userId: String): Future[User]
 
   /**
    * Establish a follow relationship between two users
@@ -73,7 +73,7 @@ trait UserService extends IdentityService[User] {
    * @return the number of followers for the user or zero
    * if the user does not exist
    */
-  def getFollowerCount(userId: String): Future[Int]
+  def getFollowersCount(userId: String): Future[Int]
 
   /**
    * Retrieve a list of followers for the user
@@ -105,19 +105,19 @@ trait UserService extends IdentityService[User] {
   def getFollowings(userId: String, skip: Int, limit: Int): Future[List[UserSummary]]
 
   /**
-   * Check if a user is followed by another user
+   * Check if a user is following another user
    * @param from user id that is being followed
    * @param to user id that is following
-   * @return whether user is following target user or not
+   * @return if user is following target user(1) isfollowed(-1) or not following(0) or both following each other(2)
    */
-  def isFollowed(from: String, to: String): Future[Boolean]
+  def isFollowing(from: String, to: String): Future[Int]
 
   /**
    * Load user summary by given user id
    * @param userId target user id
    * @return UserSummary object contains summary information
    */
-  def loadUserSummary(userId: String): Future[Option[UserSummary]]
+  def getUserSummary(userId: String): Future[UserSummary]
 
   /**
    * Retrieve refresh token by give user id

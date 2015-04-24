@@ -4,7 +4,6 @@ import javax.inject.Inject
 
 import com.mohiva.play.silhouette.api.{ Environment, Logger, Silhouette }
 import com.mohiva.play.silhouette.impl.authenticators.JWTAuthenticator
-import com.muguang.core.helpers.ObjectIdJsonFormats
 import models.post.PostService
 import models._
 import org.joda.time.DateTime

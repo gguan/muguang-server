@@ -30,7 +30,7 @@ class UserController @Inject() (
   }
 
   def getUserSummary(id: String) = SecuredAction.async { implicit request =>
-    userService.loadUserSummary(id).map(userSummary => Ok(Json.toJson(userSummary)))
+    userService.getUserSummary(id).map(userSummary => Ok(Json.toJson(userSummary)))
   }
 
   def getRecentPostsByUserId(userId: String, skip: Int, limit: Int) = Action.async { implicit request =>

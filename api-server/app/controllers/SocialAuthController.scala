@@ -116,7 +116,7 @@ class SocialAuthController @Inject() (
 
     (idOpt, rtOpt) match {
       case (Some(id), Some(refreshToken)) => {
-        userService.getUserRefreshTokenWithLoginInfo(id).flatMap(t => t match {
+        userService.getRefreshTokenByUserId(id).flatMap(t => t match {
           case Some((Some(token), loginInfo)) => {
             if (token.isValid && token.token == refreshToken) {
               for {
