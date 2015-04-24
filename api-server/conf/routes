@@ -11,14 +11,15 @@ POST        /api/v1/authenticate/:provider   @controllers.SocialAuthController.a
 POST        /api/v1/auth/refreshToken        @controllers.SocialAuthController.refreshToken
 
 # User API
-POST        /api/v1/user/follow/:id          @controllers.FollowController.follow(id: String)
-POST        /api/v1/user/unfollow/:id        @controllers.FollowController.unfollow(id: String)
+GET         /api/v1/user/:id                 @controllers.UserController.getUserSummary(id: String)
+PUT         /api/v1/user/following/:id       @controllers.FollowController.follow(id: String)
+DELETE      /api/v1/user/following/:id       @controllers.FollowController.unfollow(id: String)
 GET         /api/v1/user/:id/followers       @controllers.UserController.getFollowers(id: String, skip: Int = 0, limit: Int = 20)
-GET         /api/v1/user/:id/followings      @controllers.UserController.getFollowings(id: String, skip: Int = 0, limit: Int = 20)
-GET         /api/v1/user/:id/posts           @controllers.UserController.getRecentPostsByUserId(id: String, skip: Int = 0, limit: Int = 21)
+GET         /api/v1/user/:id/following       @controllers.UserController.getFollowings(id: String, skip: Int = 0, limit: Int = 20)
 
 
 # Post API
+GET         /api/v1/user/:id/posts           @controllers.UserController.getRecentPostsByUserId(id: String, skip: Int = 0, limit: Int = 21)
 POST        /api/v1/post                     @controllers.PostController.createPost()
 DELETE      /api/v1/post/:id                 @controllers.PostController.deletePost(id: String)
 POST        /api/v1/post/:id/comment         @controllers.PostController.commentPost(id: String)

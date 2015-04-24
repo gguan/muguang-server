@@ -14,11 +14,11 @@ class FollowController @Inject() (
   val userService: UserService) extends Silhouette[User, JWTAuthenticator] with Logger {
 
   def follow(id: String) = SecuredAction.async { implicit request =>
-    userService.follow(id, request.identity.identify).map(result => Ok)
+    userService.follow(request.identity.identify, id).map(result => Ok)
   }
 
   def unfollow(id: String) = SecuredAction.async { implicit request =>
-    userService.unfollow(id, request.identity.identify).map(result => Ok)
+    userService.unfollow(request.identity.identify, id).map(result => Ok)
   }
 
 }

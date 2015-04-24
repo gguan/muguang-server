@@ -26,7 +26,7 @@ class UserController @Inject() (
   }
 
   def getFollowings(id: String, skip: Int, limit: Int) = SecuredAction.async {
-    userService.getFollowings(id, skip, limit).map(list => Ok(Json.toJson(list)))
+    userService.getFollowing(id, skip, limit).map(list => Ok(Json.toJson(list)))
   }
 
   def getUserSummary(id: String) = SecuredAction.async { implicit request =>

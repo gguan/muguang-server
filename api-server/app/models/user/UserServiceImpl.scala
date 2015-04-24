@@ -50,7 +50,7 @@ class UserServiceImpl @Inject() (userDAO: UserDAO, postService: PostService) ext
           _id = BSONObjectID.generate,
           loginInfo = profile.loginInfo,
           refreshToken = Some(RefreshToken(RandomUtils.generateToken(), DateTime.now().plusDays(30))),
-          screenName = profile.firstName + "_" + profile.lastName,
+          screenName = profile.firstName.getOrElse("") + " " + profile.lastName.getOrElse(""),
           email = profile.email,
           avatarUrl = profile.avatarURL
         ))
@@ -82,10 +82,15 @@ class UserServiceImpl @Inject() (userDAO: UserDAO, postService: PostService) ext
   }
 
   override def validateUser(userId: String): Future[User] = {
-    userDAO.findById(userId).map(userOpt => userOpt match {
-      case Some(user) => user
-      case None => throw ResourceNotFoundException(userId)
-    })
+    try {
+      userDAO.findById(userId).map(userOpt => userOpt match {
+        case Some(user) => user
+        case None => throw ResourceNotFoundException(userId)
+      })
+    } catch {
+      case e: Throwable => throw ResourceNotFoundException(userId)
+    }
+
   }
 
   override def follow(from: String, to: String): Future[Unit] = {
@@ -147,7 +152,7 @@ class UserServiceImpl @Inject() (userDAO: UserDAO, postService: PostService) ext
     )
   }
 
-  override def getFollowings(userId: String, skip: Int, limit: Int): Future[List[UserSummary]] = {
+  override def getFollowing(userId: String, skip: Int, limit: Int): Future[List[UserSummary]] = {
     val futureIds = followingCollection
       .find(BSONDocument("_f" -> userId), BSONDocument("_t" -> 1))
       .cursor[BSONDocument]
@@ -155,7 +160,7 @@ class UserServiceImpl @Inject() (userDAO: UserDAO, postService: PostService) ext
 
     for {
       ids <- futureIds.map(list => list.flatMap(_.getAs[String]("_t")))
-      followers <- userDAO.findUsersByIds(ids, skip, limit)
+      followers <- { println(ids); userDAO.findUsersByIds(ids, skip, limit) }
     } yield {
       followers.map(u => UserSummary(Some(u._id.stringify), u.screenName, u.avatarUrl))
     }

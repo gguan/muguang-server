@@ -102,7 +102,7 @@ trait UserService extends IdentityService[User] {
    * that the target user is following or an empty list if
    * the user does not exist
    */
-  def getFollowings(userId: String, skip: Int, limit: Int): Future[List[UserSummary]]
+  def getFollowing(userId: String, skip: Int, limit: Int): Future[List[UserSummary]]
 
   /**
    * Check if a user is following another user
