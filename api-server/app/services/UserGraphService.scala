@@ -103,7 +103,7 @@ trait UserGraphService extends IdentityService[User] {
    * that the target user is following or an empty list if
    * the user does not exist
    */
-  def getFollowing(userId: BSONObjectID, skip: Int, limit: Int): Future[List[BSONObjectID]]
+  def getFollowing(userId: BSONObjectID, skip: Int = 0, limit: Int = Int.MaxValue): Future[List[BSONObjectID]]
 
   /**
    * Check if a user is following another user

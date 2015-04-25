@@ -84,10 +84,10 @@ class UserGraphServiceImpl @Inject() (userDAO: UserDAO) extends UserGraphService
     try {
       userDAO.findById(userId).map(userOpt => userOpt match {
         case Some(user) => user
-        case None => throw ResourceNotFoundException(userId.stringify)
+        case None => throw ResourceNotFoundException(userId)
       })
     } catch {
-      case e: Throwable => throw ResourceNotFoundException(userId.stringify)
+      case e: Throwable => throw ResourceNotFoundException(userId)
     }
 
   }
@@ -170,7 +170,7 @@ class UserGraphServiceImpl @Inject() (userDAO: UserDAO) extends UserGraphService
   }
 
   override def getUserSummary(userId: BSONObjectID): Future[UserSummary] = {
-    validateUser(userId).map { user =>
+    validateUser(userId.stringify).map { user =>
       UserSummary(None,
         user.screenName,
         user.avatarUrl,
