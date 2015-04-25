@@ -50,7 +50,7 @@ trait UserGraphService extends IdentityService[User] {
    * is invalid, a service exception is thrown.
    * @return
    */
-  def validateUser(userId: BSONObjectID): Future[User]
+  def validateUser(userId: String): Future[User]
 
   /**
    * Establish a follow relationship between two users
@@ -84,7 +84,7 @@ trait UserGraphService extends IdentityService[User] {
    * @return a list of UserSummary objects representing the followers
    * of the target user or an empty list if the user does not exist
    */
-  def getFollowers(userId: BSONObjectID, skip: Int = 0, limit: Int = Int.MaxValue): Future[List[UserSummary]]
+  def getFollowers(userId: BSONObjectID, skip: Int = 0, limit: Int = Int.MaxValue): Future[List[BSONObjectID]]
 
   /**
    * Determine how many users a target is following
@@ -103,7 +103,7 @@ trait UserGraphService extends IdentityService[User] {
    * that the target user is following or an empty list if
    * the user does not exist
    */
-  def getFollowing(userId: BSONObjectID, skip: Int, limit: Int): Future[List[UserSummary]]
+  def getFollowing(userId: BSONObjectID, skip: Int, limit: Int): Future[List[BSONObjectID]]
 
   /**
    * Check if a user is following another user

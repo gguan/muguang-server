@@ -80,7 +80,7 @@ class UserGraphServiceImpl @Inject() (userDAO: UserDAO) extends UserGraphService
     }
   }
 
-  override def validateUser(userId: BSONObjectID): Future[User] = {
+  override def validateUser(userId: String): Future[User] = {
     try {
       userDAO.findById(userId).map(userOpt => userOpt match {
         case Some(user) => user
