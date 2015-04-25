@@ -10,6 +10,7 @@ import play.extras.geojson.LatLng
 import play.modules.reactivemongo.json.BSONFormats._
 
 import reactivemongo.bson.{ BSONArray, BSONDocument, BSONObjectID }
+import services.PostService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -17,7 +18,7 @@ import scala.util.Random
 
 class PostServiceImpl @Inject() (postDAO: PostDAO) extends PostService {
 
-  override def save(post: Post): Future[Post] = {
+  def save(post: Post): Future[Post] = {
     postDAO.insert(post).map {
       result =>
         result match {
@@ -49,7 +50,7 @@ class PostServiceImpl @Inject() (postDAO: PostDAO) extends PostService {
   override def createPost(postCommand: CreatePostCommand, user: User): Post = {
     Post(
       BSONObjectID.generate,
-      user._id.stringify,
+      user._id,
       postCommand.`type`,
       postCommand.photos,
       postCommand.status,
@@ -61,16 +62,6 @@ class PostServiceImpl @Inject() (postDAO: PostDAO) extends PostService {
 
   def countPostByUserId(userId: String): Future[Int] = {
     postDAO.count(Json.obj("uid" -> userId))
-  }
-
-  def getRecentPostsByUserId(userId: String, skip: Int, limit: Int): Future[List[PostSummary]] = {
-    val query = Json.obj(
-      "$query" -> Json.obj("uid" -> userId),
-      "$orderby" -> Json.obj("ct" -> -1)
-    )
-    postDAO.findWithOptions(query, skip, limit).map { list =>
-      list.map(p => PostSummary(p._id.stringify, p.photos.headOption.map(_.thumbnail).getOrElse(""), p.photos.size))
-    }
   }
 
   override def commentPost(postId: String, comment: Comment): Future[Comment] = {
@@ -178,4 +169,51 @@ class PostServiceImpl @Inject() (postDAO: PostDAO) extends PostService {
 
   }
 
+  /**
+   * Return full post item by its ID
+   * @param postId the ID of the Post to return
+   * @return the Post with the given ID or None, if
+   *         no post exists with that ID
+   */
+  override def getPostById(postId: BSONObjectID): Future[Option[Post]] = postDAO.findById(postId)
+
+  override def publishPost(user: User, post: Post): Future[Post] = {
+    postDAO.insert(post).map { result =>
+      result match {
+        case Right(doc) => doc
+        case Left(ex) => throw ex
+      }
+    }
+  }
+
+  override def getPostFor(userId: BSONObjectID, limit: Int, anchor: Option[BSONObjectID] = None): Future[List[Post]] = {
+    val query =
+      if (anchor.isEmpty) {
+        Json.obj("_u" -> userId)
+      } else {
+        Json.obj(
+          "_u" -> Json.toJson(userId),
+          "_id" -> Json.obj("$gt" -> anchor.get)
+        )
+      }
+    postDAO.findWithOptions(query, 0, limit)
+  }
+
+  override def getPostFor(userId: BSONObjectID, limit: Int, skip: Int): Future[List[Post]] = {
+    val query = Json.obj("_u" -> userId)
+    postDAO.findWithOptions(query, skip, limit)
+  }
+
+  override def getPostFor(users: Seq[BSONObjectID], limit: Int, anchor: Option[BSONObjectID] = None): Future[List[Post]] = {
+    val query =
+      if (anchor.isEmpty) {
+        Json.obj("_u" -> Json.obj("$in" -> users))
+      } else {
+        Json.obj(
+          "_u" -> Json.obj("$in" -> users),
+          "_id" -> Json.obj("$gt" -> anchor.get)
+        )
+      }
+    postDAO.findWithOptions(query, 0, limit)
+  }
 }
