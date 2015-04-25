@@ -7,16 +7,15 @@ import com.mohiva.play.silhouette.impl.providers.CommonSocialProfile
 import com.muguang.core.db.MongoHelper
 import com.muguang.core.exceptions.ResourceNotFoundException
 import com.muguang.util.RandomUtils
-import models.post.PostService
 import models.{ RefreshToken, UserSummary, User }
 import org.joda.time.DateTime
 import play.api.libs.json.Json
-import play.modules.reactivemongo.json.collection.JSONCollection
-import play.modules.reactivemongo.json.BSONFormats._
+import reactivemongo.api.QueryOpts
 import reactivemongo.api.collections.default.BSONCollection
 import reactivemongo.bson.{ BSONDocument, BSONObjectID }
 import module.sihouette.WeiboProfile
 import reactivemongo.core.commands.Count
+import services.UserGraphService
 
 import scala.concurrent.Future
 
@@ -25,14 +24,14 @@ import scala.concurrent.Future
  *
  * @param userDAO The user DAO implementation.
  */
-class UserServiceImpl @Inject() (userDAO: UserDAO, postService: PostService) extends UserService with MongoHelper {
+class UserGraphServiceImpl @Inject() (userDAO: UserDAO) extends UserGraphService with MongoHelper {
 
   val followingCollection = db.collection[BSONCollection]("following")
-  val followersCollection = db.collection[JSONCollection]("followers")
+  val followersCollection = db.collection[BSONCollection]("followers")
 
   override def retrieve(loginInfo: LoginInfo): Future[Option[User]] = userDAO.find(loginInfo)
 
-  override def retrieve(userId: String): Future[Option[User]] = userDAO.findById(userId)
+  override def retrieve(userId: BSONObjectID): Future[Option[User]] = userDAO.findById(userId)
 
   override def save(user: User) = userDAO.save(user)
 
@@ -81,19 +80,19 @@ class UserServiceImpl @Inject() (userDAO: UserDAO, postService: PostService) ext
     }
   }
 
-  override def validateUser(userId: String): Future[User] = {
+  override def validateUser(userId: BSONObjectID): Future[User] = {
     try {
       userDAO.findById(userId).map(userOpt => userOpt match {
         case Some(user) => user
-        case None => throw ResourceNotFoundException(userId)
+        case None => throw ResourceNotFoundException(userId.stringify)
       })
     } catch {
-      case e: Throwable => throw ResourceNotFoundException(userId)
+      case e: Throwable => throw ResourceNotFoundException(userId.stringify)
     }
 
   }
 
-  override def follow(from: String, to: String): Future[Unit] = {
+  override def follow(from: BSONObjectID, to: BSONObjectID): Future[Unit] = {
 
     // Use the some edge _id for both edge collections
     val edgeId = BSONObjectID.generate
@@ -109,7 +108,7 @@ class UserServiceImpl @Inject() (userDAO: UserDAO, postService: PostService) ext
     } yield {}
   }
 
-  override def unfollow(from: String, to: String): Future[Unit] = {
+  override def unfollow(from: BSONObjectID, to: BSONObjectID): Future[Unit] = {
 
     for {
       following <- Recover(followingCollection.remove(BSONDocument("_f" -> from, "_t" -> to))) {}
@@ -120,7 +119,7 @@ class UserServiceImpl @Inject() (userDAO: UserDAO, postService: PostService) ext
     } yield {}
   }
 
-  override def getFollowersCount(userId: String): Future[Int] = {
+  override def getFollowersCount(userId: BSONObjectID): Future[Int] = {
     followersCollection.db.command(
       Count(
         "followers",
@@ -129,21 +128,16 @@ class UserServiceImpl @Inject() (userDAO: UserDAO, postService: PostService) ext
     )
   }
 
-  override def getFollowers(userId: String, skip: Int, limit: Int): Future[List[UserSummary]] = {
-    val futureIds = followersCollection
+  override def getFollowers(userId: BSONObjectID, skip: Int = 0, limit: Int = Int.MaxValue): Future[List[BSONObjectID]] = {
+    followersCollection
       .find(BSONDocument("_f" -> userId), BSONDocument("_t" -> 1))
+      .options(QueryOpts(skipN = skip))
       .cursor[BSONDocument]
-      .collect[List]()
-
-    for {
-      ids <- futureIds.map(list => list.flatMap(_.getAs[String]("_t")))
-      followers <- userDAO.findUsersByIds(ids, skip, limit)
-    } yield {
-      followers.map(u => UserSummary(Some(u._id.stringify), u.screenName, u.avatarUrl))
-    }
+      .collect[List](limit)
+      .map(list => list.flatMap(_.getAs[BSONObjectID]("_t")))
   }
 
-  override def getFollowingCount(userId: String): Future[Int] = {
+  override def getFollowingCount(userId: BSONObjectID): Future[Int] = {
     followersCollection.db.command(
       Count(
         "following",
@@ -152,21 +146,16 @@ class UserServiceImpl @Inject() (userDAO: UserDAO, postService: PostService) ext
     )
   }
 
-  override def getFollowing(userId: String, skip: Int, limit: Int): Future[List[UserSummary]] = {
-    val futureIds = followingCollection
+  override def getFollowing(userId: BSONObjectID, skip: Int = 0, limit: Int = Int.MaxValue): Future[List[BSONObjectID]] = {
+    followingCollection
       .find(BSONDocument("_f" -> userId), BSONDocument("_t" -> 1))
+      .options(QueryOpts(skipN = skip))
       .cursor[BSONDocument]
-      .collect[List]()
-
-    for {
-      ids <- futureIds.map(list => list.flatMap(_.getAs[String]("_t")))
-      followers <- { println(ids); userDAO.findUsersByIds(ids, skip, limit) }
-    } yield {
-      followers.map(u => UserSummary(Some(u._id.stringify), u.screenName, u.avatarUrl))
-    }
+      .collect[List](limit)
+      .map(list => list.flatMap(_.getAs[BSONObjectID]("_t")))
   }
 
-  override def isFollowing(from: String, to: String): Future[Int] = {
+  override def isFollowing(from: BSONObjectID, to: BSONObjectID): Future[Int] = {
     for {
       isfollowing <- followingCollection.find(BSONDocument("_f" -> from, "_t" -> to)).one[BSONDocument]
       isfollowed <- followersCollection.find(BSONDocument("_f" -> to, "_t" -> from)).one[BSONDocument]
@@ -180,7 +169,7 @@ class UserServiceImpl @Inject() (userDAO: UserDAO, postService: PostService) ext
     }
   }
 
-  override def getUserSummary(userId: String): Future[UserSummary] = {
+  override def getUserSummary(userId: BSONObjectID): Future[UserSummary] = {
     validateUser(userId).map { user =>
       UserSummary(None,
         user.screenName,
@@ -193,7 +182,15 @@ class UserServiceImpl @Inject() (userDAO: UserDAO, postService: PostService) ext
     }
   }
 
-  def getRefreshTokenByUserId(userId: String): Future[Option[(Option[RefreshToken], LoginInfo)]] = {
+  override def getUerSummaryByIds(ids: List[BSONObjectID]): Future[List[UserSummary]] = {
+    for {
+      followers <- userDAO.getUserByIds(ids)
+    } yield {
+      followers.map(u => UserSummary(Some(u._id.stringify), u.screenName, u.avatarUrl))
+    }
+  }
+
+  override def getRefreshTokenByUserId(userId: String): Future[Option[(Option[RefreshToken], LoginInfo)]] = {
     userDAO.findById(userId).map { userOpt =>
       userOpt.map(user => (user.refreshToken, user.loginInfo))
     }

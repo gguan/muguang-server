@@ -28,10 +28,6 @@ trait UserDAO extends DocumentDao[User] {
    */
   def save(user: User): Future[User]
 
-  def countFollowers(userId: String): Future[Int]
-
-  def getFollowers(userId: String, skip: Int, limit: Int): Future[List[User]]
-
-  def findUsersByIds(userIds: Seq[String], skip: Int, limit: Int): Future[List[User]]
+  def getUserByIds(userIds: Seq[BSONObjectID]): Future[List[User]]
 
 }
