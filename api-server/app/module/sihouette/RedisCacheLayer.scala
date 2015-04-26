@@ -26,7 +26,9 @@ class RedisCacheLayer extends CacheLayer {
 
   }
 
-  override def remove(key: String): Future[Unit] = RedisCacheLayer.remove(key)
+  override def remove(key: String): Future[Unit] = {
+    RedisCacheLayer.remove(key)
+  }
 
   override def find[T: ClassTag](key: String): Future[Option[T]] = RedisCacheLayer.find[T](key)
 }
@@ -42,7 +44,10 @@ object RedisCacheLayer extends CacheLayer {
     put[T](key)(value, ttl = Some(expiration.seconds)).map(_ => value)
   }
 
-  override def remove(key: String): Future[Unit] = remove(key)
+  override def remove(key: String): Future[Unit] = {
+    // Need to explicitly call remove from scalacache to avoid recursive
+    scalacache.remove(key)
+  }
 
   override def find[T: ClassTag](key: String): Future[Option[T]] = get[T](key)
 }
