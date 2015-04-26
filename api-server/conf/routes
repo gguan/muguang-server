@@ -6,16 +6,17 @@
 GET         /                                @controllers.ApplicationController.index
 GET         /test1                           @controllers.ApplicationController.test1
 GET         /test2                           @controllers.ApplicationController.test2
-GET         /authenticate/:provider          @controllers.SocialAuthController.authenticateByWeb(provider)
-POST        /api/v1/authenticate/:provider   @controllers.SocialAuthController.authenticate(provider)
-POST        /api/v1/auth/refreshToken        @controllers.SocialAuthController.refreshToken
+GET         /authenticate/:provider          @controllers.AuthController.authenticateByWeb(provider)
+POST        /api/v1/authenticate/:provider   @controllers.AuthController.authenticate(provider)
+POST        /api/v1/auth/refreshToken        @controllers.AuthController.refreshToken
+GET         /api/v1/auth/signOut             @controllers.AuthController.signOut
 
 # User API
 GET         /api/v1/user/:id                 @controllers.UserController.getUserSummary(id: String)
 PUT         /api/v1/user/following/:id       @controllers.FollowController.follow(id: String)
 DELETE      /api/v1/user/following/:id       @controllers.FollowController.unfollow(id: String)
 GET         /api/v1/user/:id/followers       @controllers.UserController.getFollowers(id: String, skip: Int = 0, limit: Int = 20)
-GET         /api/v1/user/:id/following       @controllers.UserController.getFollowings(id: String, skip: Int = 0, limit: Int = 20)
+GET         /api/v1/user/:id/following       @controllers.UserController.getFollowing(id: String, skip: Int = 0, limit: Int = 20)
 GET         /api/v1/user/:id/posts           @controllers.UserController.getUserPosts(id: String, limit: Int = 21, skip: Int = 0)
 
 # Post API
