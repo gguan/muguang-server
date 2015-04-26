@@ -5,15 +5,13 @@ import play.api.libs.json.{ JsPath, Format }
 
 case class PostPhoto(
   thumbnail: String,
-  url: String,
-  tags: Seq[PhotoTag])
+  url: String)
 
 object PostPhoto {
 
   implicit val postPhotoFormat: Format[PostPhoto] = (
-    (JsPath \ "t").format[String] and
-    (JsPath \ "i").format[String] and
-    (JsPath \ "t").format[Seq[PhotoTag]]
+    (JsPath \ "_s").format[String] and
+    (JsPath \ "_i").format[String]
   )(PostPhoto.apply, unlift(PostPhoto.unapply))
 
 }
