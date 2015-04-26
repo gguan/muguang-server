@@ -2,13 +2,13 @@ package controllers
 
 import javax.inject.Inject
 
+import services.UserGraphService
 import com.mohiva.play.silhouette.api._
 import com.mohiva.play.silhouette.api.exceptions.ProviderException
 import com.mohiva.play.silhouette.impl.authenticators.JWTAuthenticator
 import com.mohiva.play.silhouette.impl.providers._
 import com.github.nscala_time.time.Imports._
 import models.User
-import models.user.UserService
 import module.sihouette.{ WeiboProfileBuilder, WeiboProvider }
 import play.api.i18n.Messages
 import play.api.libs.concurrent.Execution.Implicits._
@@ -22,9 +22,9 @@ import scala.concurrent.Future
  *
  * @param env The Silhouette environment.
  */
-class SocialAuthController @Inject() (
-  val env: Environment[User, JWTAuthenticator],
-  val userService: UserService) extends Silhouette[User, JWTAuthenticator] with Logger {
+class AuthController @Inject() (
+  implicit val env: Environment[User, JWTAuthenticator],
+  val userService: UserGraphService) extends Silhouette[User, JWTAuthenticator] with Logger {
 
   /**
    * Authenticates a user against a social provider.
@@ -102,11 +102,7 @@ class SocialAuthController @Inject() (
             BadRequest(Json.obj("error" -> Messages("could.not.authenticate")))
         }
       }
-      case _ => {
-        Future.successful(BadRequest(Json.obj(
-          "error" -> "missing id or access_token"
-        )))
-      }
+      case _ => Future.successful(BadRequest(Json.obj("error" -> Messages("could.not.authenticate"))))
     }
   }
 
@@ -141,6 +137,16 @@ class SocialAuthController @Inject() (
       }
       case _ => Future.successful(Unauthorized(Json.obj("error" -> Messages("error.401"))))
     }
+  }
+
+  /**
+   * Handles the Sign Out action.
+   *
+   * @return The result to display.
+   */
+  def signOut = SecuredAction.async { implicit request =>
+    env.eventBus.publish(LogoutEvent(request.identity, request, request2lang))
+    Future.successful(request.authenticator.discard(Ok("sign out successfully")))
   }
 
 }

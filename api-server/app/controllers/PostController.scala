@@ -4,26 +4,27 @@ import javax.inject.Inject
 
 import com.mohiva.play.silhouette.api.{ Environment, Logger, Silhouette }
 import com.mohiva.play.silhouette.impl.authenticators.JWTAuthenticator
-import models.post.PostService
 import models._
 import org.joda.time.DateTime
 import play.api.libs.json._
 import play.api.mvc.Action
 import play.extras.geojson._
 import reactivemongo.bson.BSONObjectID
+import services.{ TimelineService, PostService }
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class PostController @Inject() (
-  val env: Environment[User, JWTAuthenticator],
-  val postService: PostService) extends Silhouette[User, JWTAuthenticator] with Logger {
+  implicit val env: Environment[User, JWTAuthenticator],
+  val postService: PostService,
+  val feedService: TimelineService) extends Silhouette[User, JWTAuthenticator] with Logger {
 
   def createPost() = SecuredAction.async(parse.json) { implicit request =>
     request.body.validate[CreatePostCommand].asOpt match {
       case Some(postCommand) => {
         val post = postService.createPost(postCommand, request.identity)
-        postService.save(post).map(p => Ok(Json.toJson(post)))
+        postService.publishPost(request.identity, post).map(p => Ok(Json.toJson(post)))
       }
       case None => Future.successful(BadRequest)
     }

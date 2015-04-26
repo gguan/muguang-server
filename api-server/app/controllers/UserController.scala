@@ -12,7 +12,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class UserController @Inject() (
-  val env: Environment[User, JWTAuthenticator],
+  implicit val env: Environment[User, JWTAuthenticator],
   val userService: UserGraphService,
   val postService: PostService) extends Silhouette[User, JWTAuthenticator] with Logger {
 
@@ -60,15 +60,17 @@ class UserController @Inject() (
   }
 
   def getUserPosts(userId: String, limit: Int, skip: Int) = Action.async { implicit request =>
-    for {
-      user <- userService.validateUser(userId)
-      posts <- postService.getPostFor(user._id, limit, skip)
-    } yield {
-      val summaries = posts.map { p =>
-        PostSummary(p._id.stringify, p.photos.headOption.map(_.thumbnail).getOrElse(""), p.photos.size)
-      }
-      Ok(Json.toJson(summaries))
-    }
+    // TODO use feedService to get posts
+    //    for {
+    //      user <- userService.validateUser(userId)
+    //      posts <- postService.getPostFor(user._id, limit, skip)
+    //    } yield {
+    //      val summaries = posts.map { p =>
+    //        PostSummary(p._id.stringify, p.photos.headOption.map(_.thumbnail).getOrElse(""), p.photos.size)
+    //      }
+    //      Ok(Json.toJson(summaries))
+    //    }
+    Future.successful(Ok)
   }
 
 }

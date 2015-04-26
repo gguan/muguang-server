@@ -10,8 +10,9 @@ import services.UserGraphService
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class FollowController @Inject() (
-  val env: Environment[User, JWTAuthenticator],
-  val userService: UserGraphService) extends Silhouette[User, JWTAuthenticator] with Logger {
+  implicit val env: Environment[User, JWTAuthenticator],
+  val userService: UserGraphService)
+  extends Silhouette[User, JWTAuthenticator] with Logger {
 
   def follow(id: String) = SecuredAction.async { implicit request =>
     for {
