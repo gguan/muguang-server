@@ -44,4 +44,15 @@ object DBQueryBuilder {
   def query[T](query: T)(implicit writer: Writes[T]): JsObject = Json.obj("$query" -> query)
 
   def orderBy[T](query: T)(implicit writer: Writes[T]): JsObject = Json.obj("$orderby" -> query)
+
+  def pushToCappedArray[T](fieldKey: String, values: Seq[T], limit: Int)(implicit writer: Writes[T]): JsObject = {
+    Json.obj(
+      "$push" -> Json.obj(
+        fieldKey -> Json.obj(
+          "$each" -> values,
+          "$slice" -> -limit
+        )
+      )
+    )
+  }
 }
