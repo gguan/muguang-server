@@ -92,7 +92,7 @@ class AuthController @Inject() (
                   "access_token" -> value,
                   "token_type" -> "Bearer",
                   "expires_in" -> (DateTime.now to authenticator.expirationDate).millis / 1000,
-                  "user_id" -> id,
+                  "user_id" -> user._id.stringify,
                   "refresh_token" -> user.refreshToken
                 ))
               ))
@@ -103,7 +103,10 @@ class AuthController @Inject() (
           case _ => Future.failed(new ProviderException(s"Cannot authenticate with unexpected social provider $provider"))
         }).recover {
           case e: ProviderException =>
-            logger.error("Unexpected provider error", e)
+            // TODO
+            logger.error("Unexpected provider error:\t" + e.getMessage)
+            e.printStackTrace()
+            logger.error(request.body.toString)
             BadRequest(Json.obj("error" -> Messages("could.not.authenticate")))
         }
       }
