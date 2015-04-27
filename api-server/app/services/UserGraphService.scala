@@ -3,7 +3,7 @@ package services
 import com.mohiva.play.silhouette.api.LoginInfo
 import com.mohiva.play.silhouette.api.services.IdentityService
 import com.mohiva.play.silhouette.impl.providers.CommonSocialProfile
-import models.{ RefreshToken, User, UserSummary }
+import models.{ User, UserSummary }
 import module.sihouette.WeiboProfile
 import reactivemongo.bson.BSONObjectID
 

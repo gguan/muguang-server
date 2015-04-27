@@ -7,8 +7,7 @@ import com.mohiva.play.silhouette.impl.providers.CommonSocialProfile
 import com.muguang.core.db.MongoHelper
 import com.muguang.core.exceptions.ResourceNotFoundException
 import com.muguang.util.RandomUtils
-import models.{ RefreshToken, UserSummary, User }
-import org.joda.time.DateTime
+import models.{ UserSummary, User }
 import play.api.libs.json.Json
 import reactivemongo.api.QueryOpts
 import reactivemongo.api.collections.default.BSONCollection
