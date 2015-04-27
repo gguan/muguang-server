@@ -39,7 +39,7 @@ class UserGraphServiceImpl @Inject() (userDAO: UserDAO) extends UserGraphService
     userDAO.find(profile.loginInfo).flatMap {
       case Some(user) =>
         // Not update profile if find user, but update refresh token
-        userDAO.update(user.identify, user.copy(refreshToken = Some(RefreshToken(RandomUtils.generateToken(), DateTime.now().plusDays(30)))))
+        userDAO.update(user.identify, user.copy(refreshToken = Some(RandomUtils.generateToken())))
           .map(result => result match {
             case Left(ex) => throw ex
             case Right(u) => u
@@ -48,7 +48,7 @@ class UserGraphServiceImpl @Inject() (userDAO: UserDAO) extends UserGraphService
         userDAO.save(User(
           _id = BSONObjectID.generate,
           loginInfo = profile.loginInfo,
-          refreshToken = Some(RefreshToken(RandomUtils.generateToken(), DateTime.now().plusDays(30))),
+          refreshToken = Some(RandomUtils.generateToken()),
           screenName = profile.firstName.getOrElse("") + " " + profile.lastName.getOrElse(""),
           email = profile.email,
           avatarUrl = profile.avatarURL
@@ -60,7 +60,7 @@ class UserGraphServiceImpl @Inject() (userDAO: UserDAO) extends UserGraphService
     userDAO.find(profile.loginInfo).flatMap {
       case Some(user) =>
         // Not update profile if find user, but update refresh token
-        userDAO.update(user.identify, user.copy(refreshToken = Some(RefreshToken(RandomUtils.generateToken(), DateTime.now().plusDays(30)))))
+        userDAO.update(user.identify, user.copy(refreshToken = Some(RandomUtils.generateToken())))
           .map(result => result match {
             case Left(ex) => throw ex
             case Right(u) => u
@@ -69,7 +69,7 @@ class UserGraphServiceImpl @Inject() (userDAO: UserDAO) extends UserGraphService
         userDAO.save(User(
           _id = BSONObjectID.generate,
           loginInfo = profile.loginInfo,
-          refreshToken = Some(RefreshToken(RandomUtils.generateToken(), DateTime.now().plusDays(30))),
+          refreshToken = Some(RandomUtils.generateToken()),
           screenName = profile.screenName,
           email = profile.email,
           biography = profile.biography,
@@ -176,7 +176,7 @@ class UserGraphServiceImpl @Inject() (userDAO: UserDAO) extends UserGraphService
         user.avatarUrl,
         user.biography,
         user.location,
-        Some(user.postsCount),
+        Some(user.postCount),
         Some(user.followingCount),
         Some(user.followersCount))
     }
@@ -190,7 +190,7 @@ class UserGraphServiceImpl @Inject() (userDAO: UserDAO) extends UserGraphService
     }
   }
 
-  override def getRefreshTokenByUserId(userId: String): Future[Option[(Option[RefreshToken], LoginInfo)]] = {
+  override def getRefreshTokenByUserId(userId: String): Future[Option[(Option[String], LoginInfo)]] = {
     userDAO.findById(userId).map { userOpt =>
       userOpt.map(user => (user.refreshToken, user.loginInfo))
     }

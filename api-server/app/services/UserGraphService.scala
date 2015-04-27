@@ -132,6 +132,6 @@ trait UserGraphService extends IdentityService[User] {
    * @param userId target user id
    * @return refresh token
    */
-  def getRefreshTokenByUserId(userId: String): Future[Option[(Option[RefreshToken], LoginInfo)]]
+  def getRefreshTokenByUserId(userId: String): Future[Option[(Option[String], LoginInfo)]]
 
 }

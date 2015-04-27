@@ -12,7 +12,7 @@ case class User(
   override var _id: BSONObjectID,
   loginInfo: LoginInfo,
   screenName: String,
-  refreshToken: Option[RefreshToken],
+  refreshToken: Option[String],
   phone: Option[String] = None,
   email: Option[String] = None,
   created: DateTime = DateTime.now,
@@ -20,7 +20,7 @@ case class User(
   location: Option[String] = None,
   gender: Option[String] = None,
   avatarUrl: Option[String] = None,
-  postsCount: Int = 0,
+  postCount: Int = 0,
   followingCount: Int = 0,
   followersCount: Int = 0) extends Identity with IdentifiableModel
 
@@ -36,7 +36,7 @@ object User {
     (JsPath \ "_id").format[BSONObjectID] and
     (JsPath \ "li").format[LoginInfo] and
     (JsPath \ "sn").format[String] and
-    (JsPath \ "rtk").formatNullable[RefreshToken] and
+    (JsPath \ "rt").formatNullable[String] and
     (JsPath \ "pho").formatNullable[String] and
     (JsPath \ "e").formatNullable[String] and
     (JsPath \ "ct").format[DateTime] and
