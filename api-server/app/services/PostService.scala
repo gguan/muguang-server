@@ -13,6 +13,14 @@ import scala.concurrent.Future
 trait PostService {
 
   /**
+   * Validate if a post command is valid
+   * @param postCommand
+   * @param user the user that authored the post
+   * @return the Post object
+   */
+  def validatePostCommand(postCommand: CreatePostCommand, user: User): Post
+
+  /**
    * Return full post item by its ID
    * @param postId the ID of the Post to return
    * @return the Post with the given ID or None, if
@@ -21,12 +29,27 @@ trait PostService {
   def getPostById(postId: BSONObjectID): Future[Option[Post]]
 
   /**
-   * Publish post for a user
-   * @param user the user that authored the post
-   * @param post the post object to publish
-   * @return the post object published
+   * Delete a post by its author
+   * @param postId the ID of the post to delete
+   * @param user author
+   * @return
+   */
+  def deletePost(postId: BSONObjectID, user: User): Future[Unit]
+
+  /**
+   * Publish post by a user
+   * @param user author of the post
+   * @param post post object
+   * @return
    */
   def publishPost(user: User, post: Post): Future[Post]
+
+  /**
+   * Count total number of posts by user ID
+   * @param userId the ID of user
+   * @return count
+   */
+  def countPostFor(userId: BSONObjectID): Future[Int]
 
   /**
    * Find and return content previously published for a specified user
@@ -42,16 +65,7 @@ trait PostService {
    * @return the requested content sorted in chronological order
    *         (most recent first)
    */
-  def getPostFor(userId: BSONObjectID, limit: Int, anchor: Option[BSONObjectID] = None): Future[List[Post]]
-
-  /**
-   * Find and return content previously published for a specified user
-   * @param userId the ID of user for which to retrieve content
-   * @param limit the maximum number of posts to return
-   * @param skip the number of posts to skip
-   * @return
-   */
-  def getPostFor(userId: BSONObjectID, limit: Int, skip: Int): Future[List[Post]]
+  def getPostFor(userId: BSONObjectID, limit: Int, anchor: Option[BSONObjectID]): Future[List[Post]]
 
   /**
    * Find and return content previously published for a specified user list
@@ -67,13 +81,7 @@ trait PostService {
    * @return the requested content sorted in chronological order
    *         (most recent first).
    */
-  def getPostFor(users: Seq[BSONObjectID], limit: Int, anchor: Option[BSONObjectID] = None): Future[List[Post]]
-
-  def deleteByUser(postId: String, user: User): Future[Boolean]
-
-  def createPost(postCommand: CreatePostCommand, user: User): Post
-
-  def countPostByUserId(userId: String): Future[Int]
+  def getPostFor(users: Seq[BSONObjectID], limit: Int, anchor: Option[BSONObjectID]): Future[List[Post]]
 
   def commentPost(postId: String, comment: Comment): Future[Comment]
 

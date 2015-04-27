@@ -33,6 +33,11 @@ trait BaseDocumentDao[M <: IdentifiableModel] extends BaseDao with DocumentDao[M
     collection.find(query).cursor[M].collect[List]()
   }
 
+  def findWithLimit(query: JsObject = Json.obj(), limit: Int)(implicit reader: Reads[M]): Future[List[M]] = {
+    Logger.debug(s"Finding documents: [collection=$collectionName, query=$query]")
+    collection.find(query).cursor[M].collect[List](limit)
+  }
+
   def findWithFilter(query: JsObject = Json.obj(), filter: JsObject = Json.obj())(implicit reader: Reads[M]): Future[List[M]] = {
     Logger.debug(s"Finding documents: [collection=$collectionName, query=$query, filter=$filter]")
     collection.find(query, filter).cursor[M].collect[List]()
@@ -67,6 +72,14 @@ trait BaseDocumentDao[M <: IdentifiableModel] extends BaseDao with DocumentDao[M
   def update(id: String, query: JsObject): Future[Either[ServiceException, JsObject]] = {
     val data = updated(query)
     Logger.debug(s"Updating by query: [collection=$collectionName, id=$id, query=$data]")
+    Recover(collection.update(DBQueryBuilder.id(id), data)) {
+      data
+    }
+  }
+
+  def update(id: BSONObjectID, query: JsObject): Future[Either[ServiceException, JsObject]] = {
+    val data = updated(query)
+    Logger.debug(s"Updating by query: [collection=$collectionName, id=${id.stringify}, query=$data]")
     Recover(collection.update(DBQueryBuilder.id(id), data)) {
       data
     }

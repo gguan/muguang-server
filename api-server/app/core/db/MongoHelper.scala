@@ -52,6 +52,15 @@ trait MongoHelper extends ContextHelper {
         handling.getOrElse(Left(UnexpectedServiceException(exception.getMessage, nestedException = exception)))
     }
   }
+
+  def HandleDBFailure[T](f: Future[Either[ServiceException, T]]): Future[T] = {
+    f.map { result =>
+      result match {
+        case Right(doc) => doc
+        case Left(ex) => throw ex
+      }
+    }
+  }
 }
 
 object MongoHelper extends MongoHelper {

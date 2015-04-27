@@ -15,15 +15,16 @@ GET         /api/v1/auth/signOut             @controllers.AuthController.signOut
 
 # User API
 GET         /api/v1/user/:id/summary         @controllers.UserController.getUserSummary(id: String)
-PUT         /api/v1/user/following/:id       @controllers.FollowController.follow(id: String)
-DELETE      /api/v1/user/following/:id       @controllers.FollowController.unfollow(id: String)
 GET         /api/v1/user/:id/followers       @controllers.UserController.getFollowers(id: String, skip: Int = 0, limit: Int = 20)
 GET         /api/v1/user/:id/following       @controllers.UserController.getFollowing(id: String, skip: Int = 0, limit: Int = 20)
+PUT         /api/v1/user/following/:id       @controllers.FollowController.follow(id: String)
+DELETE      /api/v1/user/following/:id       @controllers.FollowController.unfollow(id: String)
 
 # Post API
 GET         /api/v1/post/:id                 @controllers.PostController.getPost(id: String)
 POST        /api/v1/post                     @controllers.PostController.publishPost()
 DELETE      /api/v1/post/:id                 @controllers.PostController.deletePost(id: String)
+GET         /api/v1/user/:id/posts           @controllers.PostController.getPostFor(id: String, limit: Int ?= 21, anchor: Option[String] ?= None)
 
 POST        /api/v1/post/:id/comment         @controllers.PostController.commentPost(id: String)
 DELETE      /api/v1/post/:pid/comment/:cid   @controllers.PostController.deleteComment(pid: String, cid: String)

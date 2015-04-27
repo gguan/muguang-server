@@ -13,6 +13,8 @@ trait DocumentDao[M <: IdentifiableModel] {
 
   def find(query: JsObject = Json.obj())(implicit reader: Reads[M]): Future[List[M]]
 
+  def findWithLimit(query: JsObject = Json.obj(), limit: Int)(implicit reader: Reads[M]): Future[List[M]]
+
   def findWithFilter(query: JsObject = Json.obj(), filter: JsObject = Json.obj())(implicit reader: Reads[M]): Future[List[M]]
 
   def findWithOptions(query: JsObject = Json.obj(), skip: Int, limit: Int)(implicit reader: Reads[M]): Future[List[M]]
@@ -28,6 +30,8 @@ trait DocumentDao[M <: IdentifiableModel] {
   def update(id: String, document: M)(implicit writer: Writes[M]): Future[Either[ServiceException, M]]
 
   def update(id: String, query: JsObject): Future[Either[ServiceException, JsObject]]
+
+  def update(id: BSONObjectID, query: JsObject): Future[Either[ServiceException, JsObject]]
 
   def push[S](id: String, field: String, data: S)(implicit writer: Writes[S]): Future[Either[ServiceException, S]]
 

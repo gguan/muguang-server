@@ -2,9 +2,11 @@ package models.post
 
 import javax.inject.Inject
 
-import com.muguang.core.exceptions.ResourceNotFoundException
+import com.muguang.core.exceptions.{ OperationNotAllowedException, InvalidResourceException, ResourceNotFoundException }
 import com.muguang.util.ExtractUtils
+import com.muguang.core.db.MongoHelper.HandleDBFailure
 import models._
+import models.user.UserDAO
 import play.api.libs.json.{ JsObject, Json }
 import play.extras.geojson.LatLng
 import play.modules.reactivemongo.json.BSONFormats._
@@ -16,52 +18,70 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.Random
 
-class PostServiceImpl @Inject() (postDAO: PostDAO) extends PostService {
+class PostServiceImpl @Inject() (postDAO: PostDAO, userDAO: UserDAO) extends PostService {
 
-  def save(post: Post): Future[Post] = {
-    postDAO.insert(post).map {
-      result =>
-        result match {
-          case Right(document) => document
-          case Left(ex) => throw ex
-        }
+  val PostCollectionName = "posts"
+
+  override def validatePostCommand(postCommand: CreatePostCommand, user: User): Post = {
+    postCommand.`type` match {
+      case "photo" => {
+        Post(
+          BSONObjectID.generate,
+          user._id,
+          postCommand.`type`,
+          postCommand.photos,
+          postCommand.status,
+          location = postCommand.location,
+          altitude = postCommand.altitude,
+          hashtags = ExtractUtils.extractHashtags(postCommand.status.getOrElse(""))
+        )
+      }
+      case _ => throw InvalidResourceException("Invalid post type")
     }
   }
 
-  override def deleteByUser(postId: String, user: User): Future[Boolean] = {
+  override def getPostById(postId: BSONObjectID): Future[Option[Post]] = postDAO.findById(postId)
+
+  override def deletePost(postId: BSONObjectID, user: User): Future[Unit] = {
     postDAO.findById(postId).flatMap(postOpt => postOpt match {
       case Some(post) => {
         if (post.userId == user._id) {
-          postDAO.remove(postId).map {
-            result =>
-              result match {
-                case Right(b) => b
-                case Left(ex) => throw ex
-              }
-          }
+          for {
+            result <- HandleDBFailure(postDAO.remove(postId))
+            postCount <- HandleDBFailure(userDAO.update(user._id, Json.obj("$inc" -> Json.obj("_cp" -> -1))))
+          } yield {}
         } else {
-          Future.successful(false)
+          throw OperationNotAllowedException(s"${user._id.stringify} delete post[${postId.stringify}]")
         }
       }
-      case None => Future.successful(false)
+      case None => throw ResourceNotFoundException(postId.stringify, s"post[${postId.stringify}]")
     })
   }
 
-  override def createPost(postCommand: CreatePostCommand, user: User): Post = {
-    Post(
-      BSONObjectID.generate,
-      user._id,
-      postCommand.`type`,
-      postCommand.photos,
-      postCommand.status,
-      location = postCommand.location,
-      altitude = postCommand.altitude,
-      hashtags = ExtractUtils.extractHashtags(postCommand.status.getOrElse(""))
-    )
+  override def publishPost(user: User, post: Post): Future[Post] = {
+    for {
+      result <- HandleDBFailure(postDAO.insert(post))
+      postCount <- HandleDBFailure(userDAO.update(user._id, Json.obj("$inc" -> Json.obj("_cp" -> 1))))
+    } yield {
+      result
+    }
   }
 
-  def countPostByUserId(userId: String): Future[Int] = {
-    postDAO.count(Json.obj("uid" -> userId))
+  override def countPostFor(userId: BSONObjectID): Future[Int] = {
+    postDAO.count(Json.obj("_u" -> userId))
+  }
+
+  override def getPostFor(userId: BSONObjectID, limit: Int, anchor: Option[BSONObjectID]): Future[List[Post]] = {
+    val query =
+      if (anchor.isDefined) {
+        Json.obj(
+          "_u" -> userId,
+          "_id" -> Json.obj("$lt" -> anchor.get)
+        )
+      } else {
+        Json.obj("_u" -> userId)
+      }
+    postDAO.findWithLimit(query, limit)
   }
 
   override def commentPost(postId: String, comment: Comment): Future[Comment] = {
@@ -146,7 +166,7 @@ class PostServiceImpl @Inject() (postDAO: PostDAO) extends PostService {
     import play.modules.reactivemongo.json.BSONFormats._
 
     val command = BSONDocument(
-      "geoNear" -> postDAO.getCollectionName(),
+      "geoNear" -> PostCollectionName,
       "near" -> BSONDocument(
         "type" -> "Point",
         "coordinates" -> BSONArray(latLng.lng, latLng.lat)
@@ -169,42 +189,7 @@ class PostServiceImpl @Inject() (postDAO: PostDAO) extends PostService {
 
   }
 
-  /**
-   * Return full post item by its ID
-   * @param postId the ID of the Post to return
-   * @return the Post with the given ID or None, if
-   *         no post exists with that ID
-   */
-  override def getPostById(postId: BSONObjectID): Future[Option[Post]] = postDAO.findById(postId)
-
-  override def publishPost(user: User, post: Post): Future[Post] = {
-    postDAO.insert(post).map { result =>
-      result match {
-        case Right(doc) => doc
-        case Left(ex) => throw ex
-      }
-    }
-  }
-
-  override def getPostFor(userId: BSONObjectID, limit: Int, anchor: Option[BSONObjectID] = None): Future[List[Post]] = {
-    val query =
-      if (anchor.isEmpty) {
-        Json.obj("_u" -> userId)
-      } else {
-        Json.obj(
-          "_u" -> Json.toJson(userId),
-          "_id" -> Json.obj("$gt" -> anchor.get)
-        )
-      }
-    postDAO.findWithOptions(query, 0, limit)
-  }
-
-  override def getPostFor(userId: BSONObjectID, limit: Int, skip: Int): Future[List[Post]] = {
-    val query = Json.obj("_u" -> userId)
-    postDAO.findWithOptions(query, skip, limit)
-  }
-
-  override def getPostFor(users: Seq[BSONObjectID], limit: Int, anchor: Option[BSONObjectID] = None): Future[List[Post]] = {
+  override def getPostFor(users: Seq[BSONObjectID], limit: Int, anchor: Option[BSONObjectID]): Future[List[Post]] = {
     val query =
       if (anchor.isEmpty) {
         Json.obj("_u" -> Json.obj("$in" -> users))

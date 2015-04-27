@@ -20,20 +20,38 @@ class PostController @Inject() (
   val postService: PostService,
   val feedService: TimelineService) extends Silhouette[User, JWTAuthenticator] with Logger {
 
-  def createPost() = SecuredAction.async(parse.json) { implicit request =>
+  def getPost(postId: String) = SecuredAction.async { implicit request =>
+    postService.getPostById(BSONObjectID(postId)).map(postOpt => postOpt match {
+      case Some(post) => Ok(Json.toJson(post))
+      case None => NotFound
+    })
+  }
+
+  def publishPost() = SecuredAction.async(parse.json) { implicit request =>
+    println(request.body.as[CreatePostCommand])
     request.body.validate[CreatePostCommand].asOpt match {
       case Some(postCommand) => {
-        val post = postService.createPost(postCommand, request.identity)
-        postService.publishPost(request.identity, post).map(p => Ok(Json.toJson(post)))
+        println(postCommand)
+        val post = postService.validatePostCommand(postCommand, request.identity)
+        println(post)
+        postService.publishPost(request.identity, post).map(p => Ok(Json.obj("id" -> post._id.stringify)))
+        // TODO also publish to timeline cache
       }
       case None => Future.successful(BadRequest)
     }
   }
 
   def deletePost(postId: String) = SecuredAction.async { implicit request =>
-    postService.deleteByUser(postId, request.identity).map { result =>
-      if (result) Ok
-      else BadRequest
+    postService.deletePost(BSONObjectID(postId), request.identity).map(_ => Ok)
+  }
+
+  def getPostFor(userId: String, limit: Int, anchor: Option[String]) = SecuredAction.async { implicit request =>
+    postService.getPostFor(BSONObjectID(userId), limit, anchor.map(BSONObjectID(_))).map {
+      list =>
+        val summaries = list.map { p =>
+          PostSummary(p._id.stringify, p.photos.headOption.map(_.thumbnail).getOrElse(""), p.photos.size)
+        }
+        Ok(Json.toJson(summaries))
     }
   }
 
