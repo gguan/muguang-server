@@ -8,16 +8,18 @@ import com.mohiva.play.silhouette.impl.authenticators._
 import com.mohiva.play.silhouette.impl.daos.CacheAuthenticatorDAO
 import com.mohiva.play.silhouette.impl.providers._
 import com.mohiva.play.silhouette.impl.providers.oauth2._
-import com.mohiva.play.silhouette.impl.providers.oauth2.state.{ CookieStateProvider, CookieStateSettings }
+import com.mohiva.play.silhouette.impl.providers.oauth2.state.DummyStateProvider
 import com.mohiva.play.silhouette.impl.services._
 import com.mohiva.play.silhouette.impl.util._
 import models.User
+import models.timeline._
 import models.user._
 import models.post._
 import net.codingwell.scalaguice.ScalaModule
 import play.api.Play
 import play.api.Play.current
 import module.sihouette.{ RedisCacheLayer, WeiboProvider }
+import services.{ TimelineService, PostService, UserGraphService }
 import scala.collection.immutable.ListMap
 
 /**
@@ -29,12 +31,14 @@ class SilhouetteModule extends AbstractModule with ScalaModule {
    * Configures the module.
    */
   def configure() {
-    bind[UserService].to[UserServiceImpl]
+    bind[UserGraphService].to[UserGraphServiceImpl]
     bind[UserDAO].toInstance(new UserDAOImpl())
     bind[PostService].to[PostServiceImpl]
     bind[PostDAO].toInstance(new PostDAOImpl())
+    bind[TimelineService].to[TimelineServiceImpl]
     bind[CacheLayer].to[RedisCacheLayer]
     bind[HTTPLayer].to[PlayHTTPLayer]
+    bind[OAuth2StateProvider].to[DummyStateProvider]
     bind[IDGenerator].toInstance(new SecureRandomIDGenerator(32))
     bind[FingerprintGenerator].toInstance(new DefaultFingerprintGenerator(false))
     bind[EventBus].toInstance(EventBus())
@@ -52,7 +56,7 @@ class SilhouetteModule extends AbstractModule with ScalaModule {
    */
   @Provides @Singleton
   def provideEnvironment(
-    userService: UserService,
+    userService: UserGraphService,
     authenticatorService: AuthenticatorService[JWTAuthenticator],
     eventBus: EventBus,
     facebookProvider: FacebookProvider,
@@ -98,24 +102,6 @@ class SilhouetteModule extends AbstractModule with ScalaModule {
    */
   @Provides
   def provideAvatarService(httpLayer: HTTPLayer): AvatarService = new GravatarService(httpLayer)
-
-  /**
-   * Provides the OAuth2 state provider.
-   *
-   * @param idGenerator The ID generator implementation.
-   * @return The OAuth2 state provider implementation.
-   */
-  @Provides
-  def provideOAuth2StateProvider(idGenerator: IDGenerator): OAuth2StateProvider = {
-    new CookieStateProvider(CookieStateSettings(
-      cookieName = Play.configuration.getString("silhouette.oauth2StateProvider.cookieName").get,
-      cookiePath = Play.configuration.getString("silhouette.oauth2StateProvider.cookiePath").get,
-      cookieDomain = Play.configuration.getString("silhouette.oauth2StateProvider.cookieDomain"),
-      secureCookie = Play.configuration.getBoolean("silhouette.oauth2StateProvider.secureCookie").get,
-      httpOnlyCookie = Play.configuration.getBoolean("silhouette.oauth2StateProvider.httpOnlyCookie").get,
-      expirationTime = Play.configuration.getInt("silhouette.oauth2StateProvider.expirationTime").get
-    ), idGenerator, Clock())
-  }
 
   /**
    * Provides the Facebook provider.
