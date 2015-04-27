@@ -26,3 +26,7 @@ case class ResourceNotFoundException(
   id: String,
   message: String = "error.resource.not.found",
   nestedException: Throwable = null) extends ServiceException
+
+case class InvalidResourceException(
+  message: String = "error.invalid.resource",
+  nestedException: Throwable = null) extends ServiceException
