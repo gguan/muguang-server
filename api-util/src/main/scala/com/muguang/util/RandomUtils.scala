@@ -7,7 +7,7 @@ object RandomUtils {
   val random = new SecureRandom()
 
   def generateToken(): String = {
-    new java.math.BigInteger(130, random).toString(32)
+    new java.math.BigInteger(130, random).toString(64)
   }
 
 }

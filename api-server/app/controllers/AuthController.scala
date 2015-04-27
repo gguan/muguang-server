@@ -2,6 +2,7 @@ package controllers
 
 import javax.inject.Inject
 
+import com.mohiva.play.silhouette.api.Logger
 import services.UserGraphService
 import com.mohiva.play.silhouette.api._
 import com.mohiva.play.silhouette.api.exceptions.ProviderException
@@ -47,7 +48,7 @@ class AuthController @Inject() (
             // Cache access token
             value <- env.authenticatorService.init(authenticator)
             result <- env.authenticatorService.embed(value, Future.successful(
-              Ok("authenticate successfully.")
+              Ok("authenticate successfully:" + value)
             ))
           } yield {
             env.eventBus.publish(AuthenticatedEvent(user, request, request2lang))
@@ -63,6 +64,8 @@ class AuthController @Inject() (
   }
 
   def authenticate(provider: String) = Action.async(parse.json) { implicit request =>
+
+    logger.debug("User-Agent: " + request.headers.get("User-Agent").headOption.getOrElse(""))
 
     val idOpt = (request.body \ "uid").asOpt[String]
     val authInfoOpt = (request.body \ "oauth2_info").asOpt[OAuth2Info]
@@ -83,12 +86,14 @@ class AuthController @Inject() (
               authenticator <- env.authenticatorService.create(user.loginInfo)
               // Cache access token
               value <- env.authenticatorService.init(authenticator)
+              // Embed token into response
               result <- env.authenticatorService.embed(value, Future.successful(
                 Ok(Json.obj(
-                  "uid" -> id,
                   "access_token" -> value,
+                  "token_type" -> "Bearer",
                   "expires_in" -> (DateTime.now to authenticator.expirationDate).millis / 1000,
-                  "refresh_token" -> user.refreshToken.map(_.token).getOrElse(null)
+                  "user_id" -> id,
+                  "refresh_token" -> user.refreshToken
                 ))
               ))
             } yield {
@@ -106,22 +111,26 @@ class AuthController @Inject() (
     }
   }
 
-  def refreshToken() = Action.async(parse.json) { implicit request =>
-    val idOpt = (request.body \ "uid").asOpt[String]
+  def renewToken() = Action.async(parse.json) { implicit request =>
+
+    logger.debug("User-Agent: " + request.headers.get("User-Agent").headOption.getOrElse(""))
+
+    val idOpt = (request.body \ "user_id").asOpt[String]
     val rtOpt = (request.body \ "refresh_token").asOpt[String]
 
     (idOpt, rtOpt) match {
       case (Some(id), Some(refreshToken)) => {
         userService.getRefreshTokenByUserId(id).flatMap(t => t match {
           case Some((Some(token), loginInfo)) => {
-            if (token.isValid && token.token == refreshToken) {
+            if (token == refreshToken) {
               for {
                 authenticator <- env.authenticatorService.create(loginInfo)
                 value <- env.authenticatorService.init(authenticator)
                 result <- env.authenticatorService.embed(value, Future.successful(
                   Ok(Json.obj(
-                    "uid" -> id,
+                    "user_id" -> id,
                     "access_token" -> value,
+                    "token_type" -> "Bearer",
                     "expires_in" -> (DateTime.now to authenticator.expirationDate).millis / 1000
                   ))
                 ))
@@ -146,7 +155,7 @@ class AuthController @Inject() (
    */
   def signOut = SecuredAction.async { implicit request =>
     env.eventBus.publish(LogoutEvent(request.identity, request, request2lang))
-    Future.successful(request.authenticator.discard(Ok("sign out successfully")))
+    request.authenticator.discard(Future.successful(Ok))
   }
 
 }

@@ -7,8 +7,10 @@ GET         /                                @controllers.ApplicationController.
 GET         /test1                           @controllers.ApplicationController.test1
 GET         /test2                           @controllers.ApplicationController.test2
 GET         /authenticate/:provider          @controllers.AuthController.authenticateByWeb(provider)
+
+# Authenticate
 POST        /api/v1/authenticate/:provider   @controllers.AuthController.authenticate(provider)
-POST        /api/v1/auth/refreshToken        @controllers.AuthController.refreshToken
+POST        /api/v1/auth/renewToken          @controllers.AuthController.renewToken
 GET         /api/v1/auth/signOut             @controllers.AuthController.signOut
 
 # User API
