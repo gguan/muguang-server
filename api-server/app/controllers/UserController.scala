@@ -4,9 +4,8 @@ import javax.inject.Inject
 
 import com.mohiva.play.silhouette.api.{ Logger, Silhouette, Environment }
 import com.mohiva.play.silhouette.impl.authenticators.JWTAuthenticator
-import models.{ PostSummary, UserSummary, User }
+import models.{ UserSummary, User }
 import play.api.libs.json.Json
-import play.api.mvc.Action
 import services.{ PostService, UserGraphService }
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -51,26 +50,12 @@ class UserController @Inject() (
           user.avatarUrl,
           user.biography,
           user.location,
-          Some(user.postsCount),
+          Some(user.postCount),
           Some(user.followingCount),
           Some(user.followersCount)
         )
       ))
     }
-  }
-
-  def getUserPosts(userId: String, limit: Int, skip: Int) = Action.async { implicit request =>
-    // TODO use feedService to get posts
-    //    for {
-    //      user <- userService.validateUser(userId)
-    //      posts <- postService.getPostFor(user._id, limit, skip)
-    //    } yield {
-    //      val summaries = posts.map { p =>
-    //        PostSummary(p._id.stringify, p.photos.headOption.map(_.thumbnail).getOrElse(""), p.photos.size)
-    //      }
-    //      Ok(Json.toJson(summaries))
-    //    }
-    Future.successful(Ok)
   }
 
 }
