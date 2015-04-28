@@ -11,9 +11,9 @@ case class Post(
   override var _id: BSONObjectID,
   userId: BSONObjectID,
   `type`: String,
+  created: DateTime = DateTime.now,
   photos: Seq[PostPhoto],
   status: Option[String],
-  created: DateTime = DateTime.now,
   comments: Seq[Comment] = Seq(),
   location: Option[Feature[LatLng]] = None,
   altitude: Option[Double] = None,
@@ -35,9 +35,9 @@ object Post {
     (JsPath \ "_id").format[BSONObjectID] and
     (JsPath \ "_u").format[BSONObjectID] and
     (JsPath \ "_t").format[String] and
-    (JsPath \ "pt").format[Seq[PostPhoto]] and
-    (JsPath \ "s").formatNullable[String] and
-    (JsPath \ "ct").format[DateTime] and
+    (JsPath \ "_d").format[DateTime] and
+    (JsPath \ "_p").format[Seq[PostPhoto]] and
+    (JsPath \ "_b").formatNullable[String] and
     (JsPath \ "cm").format[Seq[Comment]] and
     (JsPath \ "loc").formatNullable[Feature[LatLng]] and
     (JsPath \ "alt").formatNullable[Double] and

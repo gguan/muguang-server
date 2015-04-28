@@ -63,11 +63,11 @@ class PostController @Inject() (
 
     val comment = Comment(BSONObjectID.generate, request.identity._id, replyTo, body, DateTime.now, location)
 
-    postService.commentPost(postId, comment).map(result => Ok)
+    postService.commentPost(BSONObjectID(postId), comment, request.identity).map(result => Ok)
   }
 
   def deleteComment(postId: String, commentId: String) = SecuredAction.async { implicit request =>
-    postService.deleteCommentByUser(postId, commentId, request.identity).map { result =>
+    postService.deleteComment(BSONObjectID(postId), BSONObjectID(commentId), request.identity).map { result =>
       if (result) Ok
       else BadRequest
     }

@@ -38,11 +38,10 @@ class UserGraphServiceImpl @Inject() (userDAO: UserDAO) extends UserGraphService
     userDAO.find(profile.loginInfo).flatMap {
       case Some(user) =>
         // Not update profile if find user, but update refresh token
-        userDAO.update(user.identify, user.copy(refreshToken = Some(RandomUtils.generateToken())))
-          .map(result => result match {
-            case Left(ex) => throw ex
-            case Right(u) => u
-          })
+        userDAO.update(user.identify, user.copy(refreshToken = Some(RandomUtils.generateToken()))).map {
+          case Left(ex) => throw ex
+          case Right(u) => u
+        }
       case None => // Insert a new user
         userDAO.save(User(
           _id = BSONObjectID.generate,
@@ -59,11 +58,10 @@ class UserGraphServiceImpl @Inject() (userDAO: UserDAO) extends UserGraphService
     userDAO.find(profile.loginInfo).flatMap {
       case Some(user) =>
         // Not update profile if find user, but update refresh token
-        userDAO.update(user.identify, user.copy(refreshToken = Some(RandomUtils.generateToken())))
-          .map(result => result match {
-            case Left(ex) => throw ex
-            case Right(u) => u
-          })
+        userDAO.update(user.identify, user.copy(refreshToken = Some(RandomUtils.generateToken()))).map {
+          case Left(ex) => throw ex
+          case Right(u) => u
+        }
       case None => // Insert a new user
         userDAO.save(User(
           _id = BSONObjectID.generate,
@@ -81,10 +79,10 @@ class UserGraphServiceImpl @Inject() (userDAO: UserDAO) extends UserGraphService
 
   override def validateUser(userId: String): Future[User] = {
     try {
-      userDAO.findById(userId).map(userOpt => userOpt match {
+      userDAO.findById(userId).map {
         case Some(user) => user
         case None => throw ResourceNotFoundException(userId)
-      })
+      }
     } catch {
       case e: Throwable => throw ResourceNotFoundException(userId)
     }
