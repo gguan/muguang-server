@@ -14,6 +14,8 @@ import scala.concurrent.Future
  */
 trait UserGraphService extends IdentityService[User] {
 
+  def ensureIndexes: Future[List[Boolean]]
+
   /**
    * Find a user by userId
    * @param userId the id of the target user
@@ -134,4 +136,43 @@ trait UserGraphService extends IdentityService[User] {
    */
   def getRefreshTokenByUserId(userId: String): Future[Option[(Option[String], LoginInfo)]]
 
+  /**
+   * Restrict a user to send chat
+   * @param from user ID that is blocking
+   * @param to  user ID that is being blocked
+   * @return
+   */
+  def blockChat(from: BSONObjectID, to: BSONObjectID): Future[Unit]
+
+  /**
+   * Allow a user to send chat
+   * @param from user ID that is unblocking
+   * @param to  user ID that is being unblocked
+   * @return
+   */
+  def unblockChat(from: BSONObjectID, to: BSONObjectID): Future[Unit]
+
+  /**
+   * Add a user to blacklist
+   * @param from user ID that is blocking
+   * @param to  user ID that is added to blacklist
+   * @return
+   */
+  def blacklist(from: BSONObjectID, to: BSONObjectID): Future[Unit]
+
+  /**
+   * Check if a user is blocked
+   * @param from user ID that is being blocked
+   * @param to user ID that is blocking
+   * @return
+   */
+  def isBlocked(from: BSONObjectID, to: BSONObjectID): Future[Boolean]
+
+  /**
+   * Check if a user is in blacklist
+   * @param from user ID that is in blacklist
+   * @param to user ID that is blocking
+   * @return
+   */
+  def isInBlacklist(from: BSONObjectID, to: BSONObjectID): Future[Boolean]
 }

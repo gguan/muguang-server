@@ -120,7 +120,6 @@ class PostServiceImpl @Inject() (postDAO: PostDAO, userDAO: UserDAO) extends Pos
   }
 
   override def likePost(postId: BSONObjectID, emotion: PostEmotion, user: User): Future[Unit] = {
-
     postDAO.findById(postId).flatMap {
       case Some(post) =>
         if (post.emotions.exists(_.userId == user._id)) {

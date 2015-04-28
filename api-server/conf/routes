@@ -20,6 +20,10 @@ GET         /api/v1/user/:id/following       @controllers.UserController.getFoll
 PUT         /api/v1/user/following/:id       @controllers.FollowController.follow(id: String)
 DELETE      /api/v1/user/following/:id       @controllers.FollowController.unfollow(id: String)
 GET         /api/v1/user/:id/posts           @controllers.PostController.getPostFor(id: String, limit: Int ?= 21, anchor: Option[String] ?= None)
+PUT         /api/v1/user/blockchat/:id       @controllers.BlockController.blockChat(id: String)
+PUT         /api/v1/user/blacklist/:id       @controllers.BlockController.blacklist(id: String)
+GET         /api/v1/user/blockchat/:id       @controllers.BlockController.isBlockedChat(id: String)
+GET         /api/v1/user/blacklist/:id       @controllers.BlockController.isInBlacklist(id: String)
 
 # Post API
 GET         /api/v1/post/:id                 @controllers.PostController.getPost(id: String)
@@ -31,13 +35,9 @@ POST        /api/v1/post/:id/like            @controllers.PostController.likePos
 DELETE      /api/v1/post/:id/like            @controllers.PostController.unlikePost(id: String)
 
 
+# Other API
 GET         /api/v1/post/random              @controllers.PostController.getOneRandomPost()
 POST        /api/v1/post/nearby              @controllers.PostController.searchNearbyPosts()
-
-
-################
-# GET         /api/v1/user/:id/posts           @controllers.UserController.getUserPosts(id: String, limit: Int = 21, skip: Int = 0)
-################
 
 
 # Map static resources from the /public folder to the /assets URL path

@@ -14,6 +14,7 @@ case class Post(
   created: DateTime = DateTime.now,
   photos: Seq[PostPhoto],
   status: Option[String],
+  anonymous: Option[Boolean] = Some(false),
   comments: Seq[Comment] = Seq(),
   emotions: Seq[PostEmotion] = Seq(),
   location: Option[Feature[LatLng]] = None,
@@ -38,6 +39,7 @@ object Post {
     (JsPath \ "_d").format[DateTime] and
     (JsPath \ "_p").format[Seq[PostPhoto]] and
     (JsPath \ "_b").formatNullable[String] and
+    (JsPath \ "_a").formatNullable[Boolean] and
     (JsPath \ "cm").format[Seq[Comment]] and
     (JsPath \ "em").format[Seq[PostEmotion]] and
     (JsPath \ "loc").formatNullable[Feature[LatLng]] and

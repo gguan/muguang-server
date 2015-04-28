@@ -8,9 +8,11 @@ import com.muguang.core.db.MongoHelper
 import com.muguang.core.exceptions.ResourceNotFoundException
 import com.muguang.util.RandomUtils
 import models.{ UserSummary, User }
+import play.api.Logger
 import play.api.libs.json.Json
 import reactivemongo.api.QueryOpts
 import reactivemongo.api.collections.default.BSONCollection
+import reactivemongo.api.indexes.{ Index, IndexType }
 import reactivemongo.bson.{ BSONDocument, BSONObjectID }
 import module.sihouette.WeiboProfile
 import reactivemongo.core.commands.Count
@@ -27,6 +29,19 @@ class UserGraphServiceImpl @Inject() (userDAO: UserDAO) extends UserGraphService
 
   val followingCollection = db.collection[BSONCollection]("following")
   val followersCollection = db.collection[BSONCollection]("followers")
+  val blockChatCollection = db.collection[BSONCollection]("blockchat")
+  val blacklistCollection = db.collection[BSONCollection]("blacklist")
+
+  override def ensureIndexes: Future[List[Boolean]] = {
+    for {
+      followingIndex <- ensureIndex(followingCollection, List(("_f", IndexType.Ascending), ("_t", IndexType.Ascending)), unique = true)
+      followersIndex <- ensureIndex(followersCollection, List(("_f", IndexType.Ascending), ("_t", IndexType.Ascending)), unique = true)
+      blockChatIndex <- ensureIndex(blockChatCollection, List(("_f", IndexType.Ascending), ("_t", IndexType.Ascending)), unique = true)
+      blacklistIndex <- ensureIndex(blacklistCollection, List(("_f", IndexType.Ascending), ("_t", IndexType.Ascending)), unique = true)
+    } yield {
+      List(followingIndex.inError, followersIndex.inError, blockChatIndex.inError, blacklistIndex.inError)
+    }
+  }
 
   override def retrieve(loginInfo: LoginInfo): Future[Option[User]] = userDAO.find(loginInfo)
 
@@ -90,39 +105,32 @@ class UserGraphServiceImpl @Inject() (userDAO: UserDAO) extends UserGraphService
   }
 
   override def follow(from: BSONObjectID, to: BSONObjectID): Future[Unit] = {
-
     // Use the some edge _id for both edge collections
     val edgeId = BSONObjectID.generate
 
     for {
       // create the "following" relationship
-      following <- Recover(followingCollection.insert(BSONDocument("_id" -> edgeId, "_f" -> from, "_t" -> to))) {}
+      following <- UnsafeRecover(followingCollection.insert(BSONDocument("_id" -> edgeId, "_f" -> from, "_t" -> to))) {}
       // create the reverse "follower" relationship
-      followers <- Recover(followersCollection.insert(BSONDocument("_id" -> edgeId, "_f" -> to, "_t" -> from))) {}
+      followers <- UnsafeRecover(followersCollection.insert(BSONDocument("_id" -> edgeId, "_f" -> to, "_t" -> from))) {}
       // update the following and follower counts of the two users respectively
-      followingCount <- userDAO.update(from, Json.obj("$inc" -> Json.obj("_cfg" -> 1)))
-      followersCount <- userDAO.update(to, Json.obj("$inc" -> Json.obj("_cfr" -> 1)))
+      followingCount <- HandleDBFailure(userDAO.update(from, Json.obj("$inc" -> Json.obj("_cfg" -> 1))))
+      followersCount <- HandleDBFailure(userDAO.update(to, Json.obj("$inc" -> Json.obj("_cfr" -> 1))))
     } yield {}
   }
 
   override def unfollow(from: BSONObjectID, to: BSONObjectID): Future[Unit] = {
-
     for {
-      following <- Recover(followingCollection.remove(BSONDocument("_f" -> from, "_t" -> to))) {}
-      followers <- Recover(followersCollection.remove(BSONDocument("_f" -> to, "_t" -> from))) {}
+      following <- UnsafeRecover(followingCollection.remove(BSONDocument("_f" -> from, "_t" -> to))) {}
+      followers <- UnsafeRecover(followersCollection.remove(BSONDocument("_f" -> to, "_t" -> from))) {}
       // update the following and follower counts of the two users respectively
-      followingCount <- userDAO.update(from, Json.obj("$inc" -> Json.obj("_cfg" -> -1)))
-      followersCount <- userDAO.update(to, Json.obj("$inc" -> Json.obj("_cfr" -> -1)))
+      followingCount <- HandleDBFailure(userDAO.update(from, Json.obj("$inc" -> Json.obj("_cfg" -> -1))))
+      followersCount <- HandleDBFailure(userDAO.update(to, Json.obj("$inc" -> Json.obj("_cfr" -> -1))))
     } yield {}
   }
 
   override def getFollowersCount(userId: BSONObjectID): Future[Int] = {
-    followersCollection.db.command(
-      Count(
-        "followers",
-        Some(BSONDocument("_f" -> userId))
-      )
-    )
+    followersCollection.db.command(Count("followers", Some(BSONDocument("_f" -> userId))))
   }
 
   override def getFollowers(userId: BSONObjectID, skip: Int = 0, limit: Int = Int.MaxValue): Future[List[BSONObjectID]] = {
@@ -135,12 +143,7 @@ class UserGraphServiceImpl @Inject() (userDAO: UserDAO) extends UserGraphService
   }
 
   override def getFollowingCount(userId: BSONObjectID): Future[Int] = {
-    followersCollection.db.command(
-      Count(
-        "following",
-        Some(BSONDocument("_f" -> userId))
-      )
-    )
+    followersCollection.db.command(Count("following", Some(BSONDocument("_f" -> userId))))
   }
 
   override def getFollowing(userId: BSONObjectID, skip: Int = 0, limit: Int = Int.MaxValue): Future[List[BSONObjectID]] = {
@@ -193,4 +196,46 @@ class UserGraphServiceImpl @Inject() (userDAO: UserDAO) extends UserGraphService
     }
   }
 
+  override def blockChat(from: BSONObjectID, to: BSONObjectID): Future[Unit] = {
+    // Use the some edge _id for both edge collections
+    val edgeId = BSONObjectID.generate
+    UnsafeRecover(blockChatCollection.insert(BSONDocument("_id" -> edgeId, "_f" -> from, "_t" -> to))) {}
+  }
+
+  override def unblockChat(from: BSONObjectID, to: BSONObjectID): Future[Unit] = {
+    UnsafeRecover(blockChatCollection.remove(BSONDocument("_f" -> from, "_t" -> to))) {}
+  }
+
+  override def blacklist(from: BSONObjectID, to: BSONObjectID): Future[Unit] = {
+    // Use the some edge _id for both edge collections
+    val edgeId = BSONObjectID.generate
+    for {
+      black <- UnsafeRecover(blacklistCollection.insert(BSONDocument("_id" -> edgeId, "_f" -> from, "_t" -> to))) {}
+      block <- blockChat(from, to)
+      unfollow1 <- unfollow(from, to)
+      unfollow2 <- unfollow(to, from)
+    } yield {}
+  }
+
+  override def isBlocked(from: BSONObjectID, to: BSONObjectID): Future[Boolean] = {
+    blockChatCollection.find(BSONDocument("_f" -> to, "_t" -> from)).one[BSONDocument].map(_.isDefined)
+  }
+
+  override def isInBlacklist(from: BSONObjectID, to: BSONObjectID): Future[Boolean] = {
+    blacklistCollection.find(BSONDocument("_f" -> to, "_t" -> from)).one[BSONDocument].map(_.isDefined)
+  }
+
+  private def ensureIndex(collection: BSONCollection,
+    key: List[(String, IndexType)],
+    name: Option[String] = None,
+    unique: Boolean = false,
+    background: Boolean = false,
+    dropDups: Boolean = false,
+    sparse: Boolean = false,
+    version: Option[Int] = None,
+    options: BSONDocument = BSONDocument()) = {
+    val index = Index(key, name, unique, background, dropDups, sparse, version, options)
+    Logger.info(s"Collection[${collection.name}] ensuring index: $index")
+    collection.indexesManager.create(index)
+  }
 }
