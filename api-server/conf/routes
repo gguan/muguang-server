@@ -19,16 +19,16 @@ GET         /api/v1/user/:id/followers       @controllers.UserController.getFoll
 GET         /api/v1/user/:id/following       @controllers.UserController.getFollowing(id: String, skip: Int = 0, limit: Int = 20)
 PUT         /api/v1/user/following/:id       @controllers.FollowController.follow(id: String)
 DELETE      /api/v1/user/following/:id       @controllers.FollowController.unfollow(id: String)
+GET         /api/v1/user/:id/posts           @controllers.PostController.getPostFor(id: String, limit: Int ?= 21, anchor: Option[String] ?= None)
 
 # Post API
 GET         /api/v1/post/:id                 @controllers.PostController.getPost(id: String)
 POST        /api/v1/post                     @controllers.PostController.publishPost()
 DELETE      /api/v1/post/:id                 @controllers.PostController.deletePost(id: String)
-GET         /api/v1/user/:id/posts           @controllers.PostController.getPostFor(id: String, limit: Int ?= 21, anchor: Option[String] ?= None)
-POST        /api/v1/user/comment/:id         @controllers.PostController.commentPost(id: String)
-DELETE      /api/v1/user/comment/:id/:cid    @controllers.PostController.deleteComment(id: String, cid: String)
-POST        /api/v1/user/like/:id            @controllers.PostController.likePost(id: String)
-DELETE      /api/v1/user/like/:id            @controllers.PostController.unlikePost(id: String)
+POST        /api/v1/post/:id/comment         @controllers.PostController.commentPost(id: String)
+DELETE      /api/v1/post/:id/comment/:cid    @controllers.PostController.deleteComment(id: String, cid: String)
+POST        /api/v1/post/:id/like            @controllers.PostController.likePost(id: String)
+DELETE      /api/v1/post/:id/like            @controllers.PostController.unlikePost(id: String)
 
 
 GET         /api/v1/post/random              @controllers.PostController.getOneRandomPost()
