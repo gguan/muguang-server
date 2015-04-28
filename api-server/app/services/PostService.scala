@@ -83,9 +83,22 @@ trait PostService {
    */
   def getPostFor(users: Seq[BSONObjectID], limit: Int, anchor: Option[BSONObjectID]): Future[List[Post]]
 
-  def commentPost(postId: String, comment: Comment): Future[Comment]
+  /**
+   * User command a post
+   * @param postId  the ID of the post
+   * @param comment the comment to save
+   * @return
+   */
+  def commentPost(postId: BSONObjectID, comment: Comment, user: User): Future[Unit]
 
-  def deleteCommentByUser(postId: String, commentId: String, user: User): Future[Boolean]
+  /**
+   * User delete a command
+   * @param postId the ID of the post
+   * @param commentId the ID of the command
+   * @param user
+   * @return
+   */
+  def deleteComment(postId: BSONObjectID, commentId: BSONObjectID, user: User): Future[Boolean]
 
   def likePost(postId: String, emotion: PostEmotion): Future[PostEmotion]
 
