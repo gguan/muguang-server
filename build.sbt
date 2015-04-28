@@ -23,7 +23,11 @@ lazy val apiServer = (project in file("api-server"))
   .dependsOn(apiUtil)
   .enablePlugins(PlayScala)
 
+lazy val apiDashboard = (project in file("api-dashboard"))
+  .enablePlugins(PlayScala)
+
 lazy val root = (project in file(".")).aggregate(
   apiUtil,
-  apiServer
+  apiServer,
+  apiDashboard
 )
