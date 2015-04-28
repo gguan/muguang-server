@@ -119,35 +119,36 @@ class PostServiceImpl @Inject() (postDAO: PostDAO, userDAO: UserDAO) extends Pos
     }
   }
 
-  override def likePost(postId: String, emotion: PostEmotion): Future[PostEmotion] = {
+  override def likePost(postId: BSONObjectID, emotion: PostEmotion, user: User): Future[Unit] = {
+
     postDAO.findById(postId).flatMap {
       case Some(post) =>
-        if (post.emotions.exists(_.userId == emotion.userId)) {
-          val query = Json.obj("$set" -> Json.obj("em.$" -> Json.toJson(emotion)))
-          postDAO.update(postId, query).map {
-            case Right(b) => emotion
+        if (post.emotions.exists(_.userId == user._id)) {
+          val value = Json.obj("_id" -> postId, "em._u" -> user._id)
+          val query = Json.obj("$set" -> Json.obj("em.$" -> emotion))
+          postDAO.update(value, query).map {
+            case Right(b) => ()
             case Left(ex) => throw ex
           }
         } else {
-          val query = Json.obj("$pull" -> Json.obj("em" -> Json.toJson(emotion)))
+          val query = Json.obj("$push" -> Json.obj("em" -> emotion))
           postDAO.update(postId, query).map {
-            case Right(b) => emotion
+            case Right(b) => ()
             case Left(ex) => throw ex
           }
         }
-
-      case None => throw ResourceNotFoundException(postId)
+      case None => throw ResourceNotFoundException(postId.stringify)
     }
   }
 
-  override def unlikePost(postId: String, user: User): Future[Boolean] = {
+  override def unlikePost(postId: BSONObjectID, user: User): Future[Unit] = {
     val query = Json.obj("$pull" ->
       Json.obj("em" ->
-        Json.obj("u" -> user._id)
+        Json.obj("_u" -> user._id)
       )
     )
     postDAO.update(postId, query).map {
-      case Right(b) => true
+      case Right(b) => ()
       case Left(ex) => throw ex
     }
   }

@@ -27,6 +27,9 @@ DELETE      /api/v1/post/:id                 @controllers.PostController.deleteP
 GET         /api/v1/user/:id/posts           @controllers.PostController.getPostFor(id: String, limit: Int ?= 21, anchor: Option[String] ?= None)
 POST        /api/v1/user/comment/:id         @controllers.PostController.commentPost(id: String)
 DELETE      /api/v1/user/comment/:id/:cid    @controllers.PostController.deleteComment(id: String, cid: String)
+POST        /api/v1/user/like/:id            @controllers.PostController.likePost(id: String)
+DELETE      /api/v1/user/like/:id            @controllers.PostController.unlikePost(id: String)
+
 
 GET         /api/v1/post/random              @controllers.PostController.getOneRandomPost()
 POST        /api/v1/post/nearby              @controllers.PostController.searchNearbyPosts()

@@ -33,6 +33,8 @@ trait DocumentDao[M <: IdentifiableModel] {
 
   def update(id: BSONObjectID, query: JsObject): Future[Either[ServiceException, JsObject]]
 
+  def update(value: JsObject, query: JsObject): Future[Either[ServiceException, JsObject]]
+
   def push[S](id: String, field: String, data: S)(implicit writer: Writes[S]): Future[Either[ServiceException, S]]
 
   def pull[S](id: String, field: String, query: S)(implicit writer: Writes[S]): Future[Either[ServiceException, Boolean]]

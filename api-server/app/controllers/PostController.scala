@@ -70,17 +70,17 @@ class PostController @Inject() (
   }
 
   def likePost(postId: String) = SecuredAction.async(parse.json) { implicit request =>
+    request.body.validate[CreateEmotionCommand].asOpt match {
+      case Some(emotionCommand) =>
+        val emotion = PostEmotion(request.identity._id, emotionCommand.code)
+        postService.likePost(BSONObjectID(postId), emotion, request.identity).map(result => Ok)
 
-    val code = (request.body \ "code").as[String]
-
-    val emotion = PostEmotion(request.identity._id, code)
-
-    postService.likePost(postId, emotion).map(result => Ok)
+      case None => Future.successful(BadRequest)
+    }
   }
 
   def unlikePost(postId: String) = SecuredAction.async(parse.json) { implicit request =>
-
-    postService.unlikePost(postId, request.identity).map(result => Ok)
+    postService.unlikePost(BSONObjectID(postId), request.identity).map(result => Ok)
   }
 
   def getOneRandomPost() = Action.async { implicit request =>

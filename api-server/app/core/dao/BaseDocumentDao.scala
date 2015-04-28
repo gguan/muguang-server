@@ -85,6 +85,14 @@ trait BaseDocumentDao[M <: IdentifiableModel] extends BaseDao with DocumentDao[M
     }
   }
 
+  def update(value: JsObject, query: JsObject): Future[Either[ServiceException, JsObject]] = {
+    val data = updated(query)
+    Logger.debug(s"Updating by query: [collection=$collectionName, id=$value, query=$data]")
+    Recover(collection.update(value, data)) {
+      data
+    }
+  }
+
   def push[S](id: String, field: String, data: S)(implicit writer: Writes[S]): Future[Either[ServiceException, S]] = {
     Logger.debug(s"Pushing to document: [collection=$collectionName, id=$id, field=$field data=$data]")
     Recover(collection.update(DBQueryBuilder.id(id), DBQueryBuilder.push(field, data)

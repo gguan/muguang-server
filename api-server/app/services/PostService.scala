@@ -84,7 +84,7 @@ trait PostService {
   def getPostFor(users: Seq[BSONObjectID], limit: Int, anchor: Option[BSONObjectID]): Future[List[Post]]
 
   /**
-   * User command a post
+   * User comment a post
    * @param postId  the ID of the post
    * @param comment the comment to save
    * @return
@@ -100,9 +100,21 @@ trait PostService {
    */
   def deleteComment(postId: BSONObjectID, commentId: BSONObjectID, user: User): Future[Unit]
 
-  def likePost(postId: String, emotion: PostEmotion): Future[PostEmotion]
+  /**
+   * User like a post
+   * @param postId  the ID of the post
+   * @param emotion emotion code
+   * @return
+   */
+  def likePost(postId: BSONObjectID, emotion: PostEmotion, user: User): Future[Unit]
 
-  def unlikePost(postId: String, user: User): Future[Boolean]
+  /**
+   * User unlike a post
+   * @param postId the ID of the post
+   * @param user user object
+   * @return
+   */
+  def unlikePost(postId: BSONObjectID, user: User): Future[Unit]
 
   def getOneRandomPost: Future[Option[Post]]
 

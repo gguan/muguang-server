@@ -15,9 +15,9 @@ case class Post(
   photos: Seq[PostPhoto],
   status: Option[String],
   comments: Seq[Comment] = Seq(),
+  emotions: Seq[PostEmotion] = Seq(),
   location: Option[Feature[LatLng]] = None,
   altitude: Option[Double] = None,
-  emotions: Seq[PostEmotion] = Seq(),
   hashtags: Set[String] = Set(),
   flag: Option[String] = None,
   score: Option[Double] = None) extends IdentifiableModel {
@@ -39,9 +39,9 @@ object Post {
     (JsPath \ "_p").format[Seq[PostPhoto]] and
     (JsPath \ "_b").formatNullable[String] and
     (JsPath \ "cm").format[Seq[Comment]] and
+    (JsPath \ "em").format[Seq[PostEmotion]] and
     (JsPath \ "loc").formatNullable[Feature[LatLng]] and
     (JsPath \ "alt").formatNullable[Double] and
-    (JsPath \ "emt").format[Seq[PostEmotion]] and
     (JsPath \ "tag").format[Set[String]] and
     (JsPath \ "flg").formatNullable[String] and
     (JsPath \ "sc").formatNullable[Double]
