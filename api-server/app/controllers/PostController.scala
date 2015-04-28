@@ -79,7 +79,7 @@ class PostController @Inject() (
     }
   }
 
-  def unlikePost(postId: String) = SecuredAction.async(parse.json) { implicit request =>
+  def unlikePost(postId: String) = SecuredAction.async { implicit request =>
     postService.unlikePost(BSONObjectID(postId), request.identity).map(result => Ok)
   }
 

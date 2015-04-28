@@ -12,8 +12,8 @@ object PostEmotion {
   import play.modules.reactivemongo.json.BSONFormats._
 
   implicit val postEmotionFormat: Format[PostEmotion] = (
-    (JsPath \ "u").format[BSONObjectID] and
-    (JsPath \ "c").format[String]
+    (JsPath \ "_u").format[BSONObjectID] and
+    (JsPath \ "_c").format[String]
   )(PostEmotion.apply, unlift(PostEmotion.unapply))
 
 }
