@@ -8,7 +8,7 @@ import scala.concurrent.Future
 
 trait PostDAO extends DocumentDao[Post] {
 
-  def getCollectionName(): String
+  def getCollectionName: String
 
   def runCommand(command: BSONDocument): Future[BSONDocument]
 

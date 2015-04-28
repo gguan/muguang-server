@@ -14,7 +14,7 @@ trait PostService {
 
   /**
    * Validate if a post command is valid
-   * @param postCommand
+   * @param postCommand commend object server received
    * @param user the user that authored the post
    * @return the Post object
    */
@@ -92,13 +92,13 @@ trait PostService {
   def commentPost(postId: BSONObjectID, comment: Comment, user: User): Future[Unit]
 
   /**
-   * User delete a command
+   * User delete a comment
    * @param postId the ID of the post
-   * @param commentId the ID of the command
-   * @param user
+   * @param commentId the ID of the comment
+   * @param user user who delete comment
    * @return
    */
-  def deleteComment(postId: BSONObjectID, commentId: BSONObjectID, user: User): Future[Boolean]
+  def deleteComment(postId: BSONObjectID, commentId: BSONObjectID, user: User): Future[Unit]
 
   def likePost(postId: String, emotion: PostEmotion): Future[PostEmotion]
 

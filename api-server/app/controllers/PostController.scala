@@ -5,7 +5,6 @@ import javax.inject.Inject
 import com.mohiva.play.silhouette.api.{ Environment, Logger, Silhouette }
 import com.mohiva.play.silhouette.impl.authenticators.JWTAuthenticator
 import models._
-import org.joda.time.DateTime
 import play.api.libs.json._
 import play.api.mvc.Action
 import play.extras.geojson._
@@ -21,22 +20,18 @@ class PostController @Inject() (
   val feedService: TimelineService) extends Silhouette[User, JWTAuthenticator] with Logger {
 
   def getPost(postId: String) = SecuredAction.async { implicit request =>
-    postService.getPostById(BSONObjectID(postId)).map(postOpt => postOpt match {
+    postService.getPostById(BSONObjectID(postId)).map {
       case Some(post) => Ok(Json.toJson(post))
       case None => NotFound
-    })
+    }
   }
 
   def publishPost() = SecuredAction.async(parse.json) { implicit request =>
-    println(request.body.as[CreatePostCommand])
     request.body.validate[CreatePostCommand].asOpt match {
-      case Some(postCommand) => {
-        println(postCommand)
+      case Some(postCommand) =>
         val post = postService.validatePostCommand(postCommand, request.identity)
-        println(post)
         postService.publishPost(request.identity, post).map(p => Ok(Json.obj("id" -> post._id.stringify)))
-        // TODO also publish to timeline cache
-      }
+      // TODO also publish to timeline cache
       case None => Future.successful(BadRequest)
     }
   }
@@ -46,31 +41,32 @@ class PostController @Inject() (
   }
 
   def getPostFor(userId: String, limit: Int, anchor: Option[String]) = SecuredAction.async { implicit request =>
-    postService.getPostFor(BSONObjectID(userId), limit, anchor.map(BSONObjectID(_))).map {
-      list =>
-        val summaries = list.map { p =>
-          PostSummary(p._id.stringify, p.photos.headOption.map(_.thumbnail).getOrElse(""), p.photos.size)
-        }
-        Ok(Json.toJson(summaries))
+    postService.getPostFor(BSONObjectID(userId), limit, anchor.map(BSONObjectID(_))).map { list =>
+      val summaries = list.map { p =>
+        PostSummary(p._id.stringify, p.photos.headOption.map(_.thumbnail).getOrElse(""), p.photos.size)
+      }
+      Ok(Json.toJson(summaries))
     }
   }
 
   def commentPost(postId: String) = SecuredAction.async(parse.json) { implicit request =>
+    request.body.validate[CreateCommentCommand].asOpt match {
+      case Some(commentCommand) =>
+        val comment = Comment(
+          BSONObjectID.generate,
+          request.identity._id,
+          commentCommand.body,
+          replyTo = commentCommand.replyTo.map(BSONObjectID(_)),
+          location = commentCommand.location
+        )
+        postService.commentPost(BSONObjectID(postId), comment, request.identity).map(_ => Ok)
 
-    val replyTo = (request.body \ "reply_to").asOpt[String].map(BSONObjectID(_))
-    val body = (request.body \ "body").as[String]
-    val location = (request.body \ "location").asOpt[Feature[LatLng]]
-
-    val comment = Comment(BSONObjectID.generate, request.identity._id, replyTo, body, DateTime.now, location)
-
-    postService.commentPost(BSONObjectID(postId), comment, request.identity).map(result => Ok)
+      case None => Future.successful(BadRequest)
+    }
   }
 
   def deleteComment(postId: String, commentId: String) = SecuredAction.async { implicit request =>
-    postService.deleteComment(BSONObjectID(postId), BSONObjectID(commentId), request.identity).map { result =>
-      if (result) Ok
-      else BadRequest
-    }
+    postService.deleteComment(BSONObjectID(postId), BSONObjectID(commentId), request.identity).map(_ => Ok)
   }
 
   def likePost(postId: String) = SecuredAction.async(parse.json) { implicit request =>

@@ -47,11 +47,9 @@ class UserDAOImpl extends UserDAO with BaseDocumentDao[User] {
    * @return The saved user.
    */
   def save(user: User) = {
-    insert(user).map { result =>
-      result match {
-        case Right(document) => document
-        case Left(ex) => throw ex
-      }
+    insert(user).map {
+      case Right(document) => document
+      case Left(ex) => throw ex
     }
   }
 

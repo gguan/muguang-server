@@ -21,13 +21,12 @@ trait MongoHelper extends ContextHelper {
     operation.map {
       lastError =>
         lastError.inError match {
-          case true => {
+          case true =>
             Logger.error(s"DB operation did not perform successfully: [lastError=$lastError]")
             Left(DBServiceException(lastError))
-          }
-          case false => {
-            Right(success)
-          }
+
+          case false => Right(success)
+
         }
     } recover {
       case exception =>
@@ -35,30 +34,24 @@ trait MongoHelper extends ContextHelper {
 
         //TODO: better failure handling here
         val handling: Option[Either[ServiceException, S]] = exception match {
-          case e: DatabaseException => {
+          case e: DatabaseException =>
             e.code.map(code => {
-              Logger.error(s"DatabaseException: [code=${code}, isNotAPrimaryError=${e.isNotAPrimaryError}]")
+              Logger.error(s"DatabaseException: [code=$code, isNotAPrimaryError=${e.isNotAPrimaryError}]")
               code match {
-                case 10148 => {
-                  Left(OperationNotAllowedException("", nestedException = e))
-                }
-                case 11000 => {
-                  Left(DuplicateResourceException(nestedException = e))
-                }
+                case 10148 => Left(OperationNotAllowedException("", nestedException = e))
+                case 11000 => Left(DuplicateResourceException(nestedException = e))
               }
             })
-          }
+
         }
         handling.getOrElse(Left(UnexpectedServiceException(exception.getMessage, nestedException = exception)))
     }
   }
 
   def HandleDBFailure[T](f: Future[Either[ServiceException, T]]): Future[T] = {
-    f.map { result =>
-      result match {
-        case Right(doc) => doc
-        case Left(ex) => throw ex
-      }
+    f.map {
+      case Right(doc) => doc
+      case Left(ex) => throw ex
     }
   }
 }

@@ -27,7 +27,7 @@ class PostDAOImpl extends PostDAO with BaseDocumentDao[Post] {
     db.command(RawCommand(command))
   }
 
-  def getCollectionName(): String = {
+  def getCollectionName: String = {
     collectionName
   }
 

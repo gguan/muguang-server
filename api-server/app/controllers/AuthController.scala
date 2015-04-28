@@ -71,7 +71,7 @@ class AuthController @Inject() (
     val authInfoOpt = (request.body \ "oauth2_info").asOpt[OAuth2Info]
 
     (idOpt, authInfoOpt) match {
-      case (Some(id), Some(authInfo)) => {
+      case (Some(id), Some(authInfo)) =>
         val params = authInfo.params.getOrElse(Map[String, String]()) + ("uid" -> id)
         val authInfoWithId = authInfo.copy(params = Some(params))
 
@@ -106,10 +106,9 @@ class AuthController @Inject() (
             // TODO
             logger.error("Unexpected provider error:\t" + e.getMessage)
             e.printStackTrace()
-            logger.error(request.body.toString)
+            logger.error(request.body.toString())
             BadRequest(Json.obj("error" -> Messages("could.not.authenticate")))
         }
-      }
       case _ => Future.successful(BadRequest(Json.obj("error" -> Messages("could.not.authenticate"))))
     }
   }
@@ -122,9 +121,9 @@ class AuthController @Inject() (
     val rtOpt = (request.body \ "refresh_token").asOpt[String]
 
     (idOpt, rtOpt) match {
-      case (Some(id), Some(refreshToken)) => {
-        userService.getRefreshTokenByUserId(id).flatMap(t => t match {
-          case Some((Some(token), loginInfo)) => {
+      case (Some(id), Some(refreshToken)) =>
+        userService.getRefreshTokenByUserId(id).flatMap {
+          case Some((Some(token), loginInfo)) =>
             if (token == refreshToken) {
               for {
                 authenticator <- env.authenticatorService.create(loginInfo)
@@ -143,10 +142,10 @@ class AuthController @Inject() (
             } else {
               Future.successful(Unauthorized(Json.obj("error" -> Messages("error.401"))))
             }
-          }
+
           case _ => Future.successful(Unauthorized(Json.obj("error" -> Messages("error.401"))))
-        })
-      }
+        }
+
       case _ => Future.successful(Unauthorized(Json.obj("error" -> Messages("error.401"))))
     }
   }

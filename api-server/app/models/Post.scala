@@ -22,7 +22,7 @@ case class Post(
   flag: Option[String] = None,
   score: Option[Double] = None) extends IdentifiableModel {
 
-  def toFeedCache(): FeedCacheItem = {
+  def toFeedCache: FeedCacheItem = {
     FeedCacheItem(_id, userId, `type`)
   }
 }

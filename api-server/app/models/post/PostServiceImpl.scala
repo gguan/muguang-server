@@ -35,7 +35,6 @@ class PostServiceImpl @Inject() (postDAO: PostDAO, userDAO: UserDAO) extends Pos
           altitude = postCommand.altitude,
           hashtags = ExtractUtils.extractHashtags(postCommand.status.getOrElse(""))
         )
-
       case _ => throw InvalidResourceException("Invalid post type")
     }
   }
@@ -71,28 +70,26 @@ class PostServiceImpl @Inject() (postDAO: PostDAO, userDAO: UserDAO) extends Pos
   }
 
   override def getPostFor(userId: BSONObjectID, limit: Int, anchor: Option[BSONObjectID]): Future[List[Post]] = {
-    val query =
-      if (anchor.isDefined) {
-        Json.obj(
-          "_u" -> userId,
-          "_id" -> Json.obj("$lt" -> anchor.get)
-        )
-      } else {
-        Json.obj("_u" -> userId)
-      }
+    val query = if (anchor.isDefined) {
+      Json.obj(
+        "_u" -> userId,
+        "_id" -> Json.obj("$lt" -> anchor.get)
+      )
+    } else {
+      Json.obj("_u" -> userId)
+    }
     postDAO.findWithLimit(query, limit)
   }
 
   override def getPostFor(users: Seq[BSONObjectID], limit: Int, anchor: Option[BSONObjectID]): Future[List[Post]] = {
-    val query =
-      if (anchor.isEmpty) {
-        Json.obj("_u" -> Json.obj("$in" -> users))
-      } else {
-        Json.obj(
-          "_u" -> Json.obj("$in" -> users),
-          "_id" -> Json.obj("$lt" -> anchor.get)
-        )
-      }
+    val query = if (anchor.isEmpty) {
+      Json.obj("_u" -> Json.obj("$in" -> users))
+    } else {
+      Json.obj(
+        "_u" -> Json.obj("$in" -> users),
+        "_id" -> Json.obj("$lt" -> anchor.get)
+      )
+    }
     postDAO.findWithLimit(query, limit)
   }
 
@@ -104,7 +101,7 @@ class PostServiceImpl @Inject() (postDAO: PostDAO, userDAO: UserDAO) extends Pos
     }
   }
 
-  override def deleteComment(postId: BSONObjectID, commentId: BSONObjectID, user: User): Future[Boolean] = {
+  override def deleteComment(postId: BSONObjectID, commentId: BSONObjectID, user: User): Future[Unit] = {
     postDAO.findById(postId).flatMap {
       case Some(post) =>
         val comment = post.comments.find(_._id.stringify == commentId)
@@ -112,20 +109,19 @@ class PostServiceImpl @Inject() (postDAO: PostDAO, userDAO: UserDAO) extends Pos
           (comment.isDefined && comment.get.author == user._id)) {
           val query = Json.obj("$pull" -> Json.obj("cm" -> Json.obj("_id" -> commentId)))
           postDAO.update(postId, query).map {
-            case Right(b) => true
-            case Left(ex) => false
+            case Right(b) => ()
+            case Left(ex) => throw ex
           }
         } else {
           throw OperationNotAllowedException(s"user[${user.identify}] delete comment ${commentId.stringify} on post[${postId.stringify}}]")
         }
-
       case None => throw ResourceNotFoundException("post:" + postId.stringify)
     }
   }
 
   override def likePost(postId: String, emotion: PostEmotion): Future[PostEmotion] = {
     postDAO.findById(postId).flatMap {
-      case Some(post) => {
+      case Some(post) =>
         if (post.emotions.exists(_.userId == emotion.userId)) {
           val query = Json.obj("$set" -> Json.obj("em.$" -> Json.toJson(emotion)))
           postDAO.update(postId, query).map {
@@ -139,14 +135,16 @@ class PostServiceImpl @Inject() (postDAO: PostDAO, userDAO: UserDAO) extends Pos
             case Left(ex) => throw ex
           }
         }
-      }
+
       case None => throw ResourceNotFoundException(postId)
     }
   }
 
   override def unlikePost(postId: String, user: User): Future[Boolean] = {
     val query = Json.obj("$pull" ->
-      Json.obj("em" -> Json.obj("u" -> Json.toJson(user._id)))
+      Json.obj("em" ->
+        Json.obj("u" -> user._id)
+      )
     )
     postDAO.update(postId, query).map {
       case Right(b) => true

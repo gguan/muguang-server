@@ -17,13 +17,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class RedisCacheLayer extends CacheLayer {
 
   override def save[T](key: String, value: T, expiration: Int): Future[T] = {
-    if (value.isInstanceOf[JWTAuthenticator]) {
-      RedisCacheLayer.save[T](key, value,
-        (value.asInstanceOf[JWTAuthenticator].expirationDate.getMillis - DateTime.now.getMillis).toInt / 1000)
-    } else {
-      RedisCacheLayer.save[T](key, value)
+    value match {
+      case authenticator: JWTAuthenticator =>
+        RedisCacheLayer.save[T](key, value, (value.asInstanceOf[JWTAuthenticator].expirationDate.getMillis - DateTime.now.getMillis).toInt / 1000)
+      case _ => RedisCacheLayer.save[T](key, value)
     }
-
   }
 
   override def remove(key: String): Future[Unit] = {
