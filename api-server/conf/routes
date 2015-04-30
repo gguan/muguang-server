@@ -36,6 +36,8 @@ DELETE      /api/v1/post/:id/comment/:cid    @controllers.PostController.deleteC
 POST        /api/v1/post/:id/like            @controllers.PostController.likePost(id: String)
 DELETE      /api/v1/post/:id/like            @controllers.PostController.unlikePost(id: String)
 
+# Timeline API
+GET         /api/v1/timeline/:id             @controllers.TimelineController.getTimeline(id: String, limit: Int ?= 20, anchor: Option[String] ?= None)
 
 # Other API
 GET         /api/v1/post/random              @controllers.PostController.getOneRandomPost()

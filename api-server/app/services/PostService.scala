@@ -29,6 +29,14 @@ trait PostService {
   def getPostById(postId: BSONObjectID): Future[Option[Post]]
 
   /**
+   * Return a list of post item by IDs
+   * @param postIds the IDs of the Posts to return
+   * @return the Post with the given ID or None, if
+   *         no post exists with that ID
+   */
+  def getPosts(postIds: Seq[BSONObjectID]): Future[List[Post]]
+
+  /**
    * Delete a post by its author
    * @param postId the ID of the post to delete
    * @param user author

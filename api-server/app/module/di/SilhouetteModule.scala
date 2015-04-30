@@ -36,6 +36,7 @@ class SilhouetteModule extends AbstractModule with ScalaModule {
     bind[PostService].to[PostServiceImpl]
     bind[PostDAO].toInstance(new PostDAOImpl())
     bind[TimelineService].to[TimelineServiceImpl]
+    bind[TimelineDAO].toInstance(new TimelineDAOImpl())
     bind[CacheLayer].to[RedisCacheLayer]
     bind[HTTPLayer].to[PlayHTTPLayer]
     bind[OAuth2StateProvider].to[DummyStateProvider]

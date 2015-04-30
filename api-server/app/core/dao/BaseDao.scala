@@ -1,5 +1,7 @@
 package com.muguang.core.dao
 
+import play.modules.reactivemongo.json.collection.JSONCollection
+
 import scala.concurrent.Future
 
 import com.muguang.core.db.MongoHelper

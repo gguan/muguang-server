@@ -31,8 +31,8 @@ class AuthController @Inject() (
   implicit val env: Environment[User, JWTAuthenticator],
   val userService: UserGraphService) extends Silhouette[User, JWTAuthenticator] with Logger {
 
-  val QiniuAccessKey = Play.configuration.getString("qiniu.accesskey").get
-  val QiniuSecretKey = Play.configuration.getString("qiniu.secretkey").get
+  val QiniuAccessKey = Play.current.configuration.getString("qiniu.accesskey").get
+  val QiniuSecretKey = Play.current.configuration.getString("qiniu.secretkey").get
 
   val QiniuUploadManager = new UploadManager()
   val QiniuAuth = Auth.create(QiniuAccessKey, QiniuSecretKey)

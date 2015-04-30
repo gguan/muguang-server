@@ -29,7 +29,7 @@ class UserGraphServiceImpl @Inject() (userDAO: UserDAO) extends UserGraphService
 
   val followingCollection = db.collection[BSONCollection]("following")
   val followersCollection = db.collection[BSONCollection]("followers")
-  val blockChatCollection = db.collection[BSONCollection]("blockchat")
+  val blockChatCollection = db.collection[BSONCollection]("block_chat")
   val blacklistCollection = db.collection[BSONCollection]("blacklist")
 
   override def ensureIndexes: Future[List[Boolean]] = {

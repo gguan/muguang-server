@@ -3,12 +3,16 @@ package com.muguang.core.dao
 import com.muguang.core.exceptions.ServiceException
 import com.muguang.core.models.IdentifiableModel
 import play.api.libs.json._
+import play.modules.reactivemongo.json.collection.JSONCollection
 import reactivemongo.api.indexes.IndexType
 import reactivemongo.bson.{ BSONDocument, BSONObjectID }
 
 import scala.concurrent.Future
 
 trait DocumentDao[M <: IdentifiableModel] {
+
+  val collection: JSONCollection
+
   def insert(document: M)(implicit writer: Writes[M]): Future[Either[ServiceException, M]]
 
   def find(query: JsObject = Json.obj())(implicit reader: Reads[M]): Future[List[M]]

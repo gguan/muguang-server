@@ -20,7 +20,6 @@ class UserDAOImpl extends UserDAO with BaseDocumentDao[User] {
   override def ensureIndexes: Future[List[Boolean]] = {
     for {
       usernameIndex <- ensureIndex(List(("li.pid", IndexType.Ascending), ("li.pk", IndexType.Ascending)))
-      followingIndex <- ensureIndex(List(("f", IndexType.Ascending)))
     } yield {
       List(usernameIndex)
     }

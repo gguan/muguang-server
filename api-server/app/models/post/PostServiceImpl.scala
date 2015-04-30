@@ -2,6 +2,7 @@ package models.post
 
 import javax.inject.Inject
 
+import com.muguang.core.db.DBQueryBuilder
 import com.muguang.core.exceptions.{ OperationNotAllowedException, InvalidResourceException, ResourceNotFoundException }
 import com.muguang.util.ExtractUtils
 import com.muguang.core.db.MongoHelper.HandleDBFailure
@@ -40,6 +41,10 @@ class PostServiceImpl @Inject() (postDAO: PostDAO, userDAO: UserDAO) extends Pos
   }
 
   override def getPostById(postId: BSONObjectID): Future[Option[Post]] = postDAO.findById(postId)
+
+  override def getPosts(postIds: Seq[BSONObjectID]): Future[List[Post]] = {
+    postDAO.find(DBQueryBuilder.in("_id", postIds))
+  }
 
   override def deletePost(postId: BSONObjectID, user: User): Future[Unit] = {
     postDAO.findById(postId).flatMap {
