@@ -17,7 +17,7 @@ import scala.concurrent.Future
 class PostController @Inject() (
   implicit val env: Environment[User, JWTAuthenticator],
   val postService: PostService,
-  val feedService: TimelineService) extends Silhouette[User, JWTAuthenticator] with Logger {
+  val timelineService: TimelineService) extends Silhouette[User, JWTAuthenticator] with Logger {
 
   def getPost(postId: String) = SecuredAction.async { implicit request =>
     postService.getPostById(BSONObjectID(postId)).map {
@@ -30,8 +30,14 @@ class PostController @Inject() (
     request.body.validate[CreatePostCommand].asOpt match {
       case Some(postCommand) =>
         val post = postService.validatePostCommand(postCommand, request.identity)
-        postService.publishPost(request.identity, post).map(p => Ok(Json.obj("id" -> post._id.stringify)))
-      // TODO also publish to timeline cache
+        for {
+          // push to post service
+          post <- postService.publishPost(request.identity, post)
+          // also push to timeline cache
+          feed <- timelineService.feed(request.identity, post)
+        } yield {
+          Ok(Json.obj("id" -> post._id.stringify))
+        }
       case None => Future.successful(BadRequest)
     }
   }
@@ -81,6 +87,12 @@ class PostController @Inject() (
 
   def unlikePost(postId: String) = SecuredAction.async { implicit request =>
     postService.unlikePost(BSONObjectID(postId), request.identity).map(result => Ok)
+  }
+
+  def getTimelineFor(userId: String, limit: Int, anchor: Option[String]) = SecuredAction.async { implicit request =>
+    timelineService
+      .getFeedFor(BSONObjectID(userId), limit, anchor.map(BSONObjectID(_)))
+      .map { feeds => Ok(Json.toJson(feeds)) }
   }
 
   def getOneRandomPost() = Action.async { implicit request =>

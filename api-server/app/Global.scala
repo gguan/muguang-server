@@ -73,7 +73,7 @@ trait Global extends GlobalSettings with SecuredSettings with Logger {
   }
 
   override def onError(request: RequestHeader, ex: Throwable) = {
-    Future.successful(InternalServerError(
+    Future.successful(BadRequest(
       Json.obj("error" -> "400 Bad Request", "message" -> ex.getMessage)
     ))
   }
