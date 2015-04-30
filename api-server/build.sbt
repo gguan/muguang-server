@@ -7,8 +7,9 @@ version := "1.0.0"
 resolvers += Resolver.sonatypeRepo("snapshots")
 
 libraryDependencies ++= Seq(
-  "redis.clients"             %  "jedis"            % "2.7.0",
-  "com.github.nscala-time"    %% "nscala-time"      % "1.8.0",
+  "com.qiniu"                 %  "qiniu-java-sdk"   % "7.0.2",
+  "redis.clients"             %  "jedis"            % "2.7.2",
+  "com.github.nscala-time"    %% "nscala-time"      % "2.0.0",
   "com.typesafe.play.extras"  %% "play-geojson"     % "1.2.0",
   "com.mohiva"                %% "play-silhouette"  % "2.0",
   "com.typesafe.play"         %% "play-mailer"      % "2.4.1",

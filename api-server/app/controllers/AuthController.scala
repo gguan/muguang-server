@@ -3,6 +3,7 @@ package controllers
 import javax.inject.Inject
 
 import com.mohiva.play.silhouette.api.Logger
+import play.api.Play
 import services.UserGraphService
 import com.mohiva.play.silhouette.api._
 import com.mohiva.play.silhouette.api.exceptions.ProviderException
@@ -16,6 +17,9 @@ import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Json
 import play.api.mvc.Action
 
+import com.qiniu.storage.UploadManager
+import com.qiniu.util.Auth
+
 import scala.concurrent.Future
 
 /**
@@ -26,6 +30,12 @@ import scala.concurrent.Future
 class AuthController @Inject() (
   implicit val env: Environment[User, JWTAuthenticator],
   val userService: UserGraphService) extends Silhouette[User, JWTAuthenticator] with Logger {
+
+  val QiniuAccessKey = Play.configuration.getString("qiniu.accesskey").get
+  val QiniuSecretKey = Play.configuration.getString("qiniu.secretkey").get
+
+  val QiniuUploadManager = new UploadManager()
+  val QiniuAuth = Auth.create(QiniuAccessKey, QiniuSecretKey)
 
   /**
    * Authenticates a user against a social provider.
@@ -158,6 +168,10 @@ class AuthController @Inject() (
   def signOut = SecuredAction.async { implicit request =>
     env.eventBus.publish(LogoutEvent(request.identity, request, request2lang))
     request.authenticator.discard(Future.successful(Ok))
+  }
+
+  def getUpToken = SecuredAction {
+    Ok(QiniuAuth.uploadToken("test"))
   }
 
 }
