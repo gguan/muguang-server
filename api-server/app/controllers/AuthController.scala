@@ -171,7 +171,7 @@ class AuthController @Inject() (
   }
 
   def getUpToken = SecuredAction {
-    Ok(QiniuAuth.uploadToken("test"))
+    Ok(Json.obj("upload_token" -> QiniuAuth.uploadToken("test")))
   }
 
 }
