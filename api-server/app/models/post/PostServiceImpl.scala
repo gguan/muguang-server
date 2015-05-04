@@ -40,6 +40,18 @@ class PostServiceImpl @Inject() (postDAO: PostDAO, userDAO: UserDAO) extends Pos
     }
   }
 
+  override def validatePost(postId: String): Future[Post] = {
+    try {
+      postDAO.findById(postId).map {
+        case Some(post) => post
+        case None       => throw ResourceNotFoundException(postId)
+      }
+    } catch {
+      case e: Throwable => throw ResourceNotFoundException(postId)
+    }
+
+  }
+
   override def getPostById(postId: BSONObjectID): Future[Option[Post]] = postDAO.findById(postId)
 
   override def getPosts(postIds: Seq[BSONObjectID]): Future[List[Post]] = {

@@ -9,20 +9,21 @@ import play.api.libs.json._
 import play.api.mvc.Action
 import play.extras.geojson._
 import reactivemongo.bson.BSONObjectID
-import services.{ TimelineService, PostService }
+import services.{ EventService, TimelineService, PostService }
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class PostController @Inject() (
-  implicit val env: Environment[User, JWTAuthenticator],
-  val postService: PostService,
-  val timelineService: TimelineService) extends Silhouette[User, JWTAuthenticator] with Logger {
+    implicit val env: Environment[User, JWTAuthenticator],
+    val postService: PostService,
+    val eventService: EventService,
+    val timelineService: TimelineService) extends Silhouette[User, JWTAuthenticator] with Logger {
 
   def getPost(postId: String) = SecuredAction.async { implicit request =>
     postService.getPostById(BSONObjectID(postId)).map {
       case Some(post) => Ok(Json.toJson(post))
-      case None => NotFound
+      case None       => NotFound
     }
   }
 
@@ -65,7 +66,14 @@ class PostController @Inject() (
           replyTo = commentCommand.replyTo.map(BSONObjectID(_)),
           location = commentCommand.location
         )
-        postService.commentPost(BSONObjectID(postId), comment, request.identity).map(_ => Ok)
+
+        for {
+          post <- postService.validatePost(postId)
+          result <- postService.commentPost(post._id, comment, request.identity)
+          event <- eventService.commentEvent(request.identity._id, post.userId, post, comment.body)
+        } yield {
+          Ok
+        }
 
       case None => Future.successful(BadRequest)
     }
@@ -79,7 +87,13 @@ class PostController @Inject() (
     request.body.validate[CreateEmotionCommand].asOpt match {
       case Some(emotionCommand) =>
         val emotion = PostEmotion(request.identity._id, emotionCommand.code)
-        postService.likePost(BSONObjectID(postId), emotion, request.identity).map(result => Ok)
+        for {
+          post <- postService.validatePost(postId)
+          result <- postService.likePost(BSONObjectID(postId), emotion, request.identity)
+          event <- eventService.emotionEvent(request.identity._id, post.userId, post, emotion.code)
+        } yield {
+          Ok
+        }
 
       case None => Future.successful(BadRequest)
     }

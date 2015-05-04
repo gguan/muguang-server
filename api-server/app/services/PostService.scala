@@ -21,6 +21,13 @@ trait PostService {
   def validatePostCommand(postCommand: CreatePostCommand, user: User): Post
 
   /**
+   * Validate if a post exists
+   * @param postId the ID of the post
+   * @return the Post object
+   */
+  def validatePost(postId: String): Future[Post]
+
+  /**
    * Return full post item by its ID
    * @param postId the ID of the Post to return
    * @return the Post with the given ID or None, if
