@@ -12,6 +12,7 @@ import com.mohiva.play.silhouette.impl.providers.oauth2.state.DummyStateProvider
 import com.mohiva.play.silhouette.impl.services._
 import com.mohiva.play.silhouette.impl.util._
 import models.User
+import models.event.{ EventDAOImpl, EventDAO, EventServiceImpl }
 import models.timeline._
 import models.user._
 import models.post._
@@ -19,7 +20,7 @@ import net.codingwell.scalaguice.ScalaModule
 import play.api.Play
 import play.api.Play.current
 import module.sihouette.{ RedisCacheLayer, WeiboProvider }
-import services.{ TimelineService, PostService, UserGraphService }
+import services.{ EventService, TimelineService, PostService, UserGraphService }
 import scala.collection.immutable.ListMap
 
 /**
@@ -37,6 +38,8 @@ class SilhouetteModule extends AbstractModule with ScalaModule {
     bind[PostDAO].toInstance(new PostDAOImpl())
     bind[TimelineService].to[TimelineServiceImpl]
     bind[TimelineDAO].toInstance(new TimelineDAOImpl())
+    bind[EventService].to[EventServiceImpl]
+    bind[EventDAO].toInstance(new EventDAOImpl())
     bind[CacheLayer].to[RedisCacheLayer]
     bind[HTTPLayer].to[PlayHTTPLayer]
     bind[OAuth2StateProvider].to[DummyStateProvider]

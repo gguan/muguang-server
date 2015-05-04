@@ -9,13 +9,13 @@ import com.muguang.core.db.MongoHelper.HandleDBFailure
 import models._
 import models.user.UserDAO
 import play.api.libs.json.{ JsObject, Json }
+import play.api.libs.concurrent.Execution.Implicits._
 import play.extras.geojson.LatLng
 import play.modules.reactivemongo.json.BSONFormats._
 
 import reactivemongo.bson.{ BSONArray, BSONDocument, BSONObjectID }
 import services.PostService
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.Random
 
@@ -175,13 +175,13 @@ class PostServiceImpl @Inject() (postDAO: PostDAO, userDAO: UserDAO) extends Pos
       "spherical" -> true
     ) ++ (maxDistance match {
         case Some(max) => BSONDocument("maxDistance" -> max)
-        case None => BSONDocument()
+        case None      => BSONDocument()
       }) ++ (minDistance match {
         case Some(min) => BSONDocument("minDistance" -> min)
-        case None => BSONDocument()
+        case None      => BSONDocument()
       }) ++ (query match {
         case Some(q) => BSONDocument("query" -> q.as[BSONDocument])
-        case None => BSONDocument()
+        case None    => BSONDocument()
       })
 
     postDAO.runCommand(command).map { doc =>
