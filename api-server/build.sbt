@@ -28,8 +28,7 @@ libraryDependencies ++= Seq(
 scalariformSettings
 
 ScalariformKeys.preferences := ScalariformKeys.preferences.value
-  .setPreference(FormatXml, false)
-  .setPreference(DoubleIndentClassDeclaration, false)
+  .setPreference(AlignSingleLineCaseStatements, true)
+  .setPreference(AlignSingleLineCaseStatements.MaxArrowIndent, 100)
+  .setPreference(DoubleIndentClassDeclaration, true)
   .setPreference(PreserveDanglingCloseParenthesis, true)
-
-
