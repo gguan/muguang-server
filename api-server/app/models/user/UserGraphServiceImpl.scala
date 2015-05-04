@@ -78,6 +78,10 @@ class UserGraphServiceImpl @Inject() (userDAO: UserDAO) extends UserGraphService
           case Right(u) => u
         }
       case None => // Insert a new user
+        val gender = if (profile.gender.isDefined) {
+          if (profile.gender.get == "male") Some(1)
+          else Some(2)
+        } else None
         userDAO.save(User(
           _id = BSONObjectID.generate,
           loginInfo = profile.loginInfo,
@@ -87,7 +91,7 @@ class UserGraphServiceImpl @Inject() (userDAO: UserDAO) extends UserGraphService
           biography = profile.biography,
           location = profile.location,
           avatarUrl = profile.avatarUrl,
-          gender = profile.gender
+          gender = gender
         ))
     }
   }
@@ -96,7 +100,7 @@ class UserGraphServiceImpl @Inject() (userDAO: UserDAO) extends UserGraphService
     try {
       userDAO.findById(userId).map {
         case Some(user) => user
-        case None => throw ResourceNotFoundException(userId)
+        case None       => throw ResourceNotFoundException(userId)
       }
     } catch {
       case e: Throwable => throw ResourceNotFoundException(userId)
@@ -162,9 +166,9 @@ class UserGraphServiceImpl @Inject() (userDAO: UserDAO) extends UserGraphService
     } yield {
       (isfollowing, isfollowed) match {
         case (Some(fg), Some(fr)) => 2
-        case (Some(fg), None) => 1
-        case (None, None) => 0
-        case (None, Some(fr)) => -1
+        case (Some(fg), None)     => 1
+        case (None, None)         => 0
+        case (None, Some(fr))     => -1
       }
     }
   }

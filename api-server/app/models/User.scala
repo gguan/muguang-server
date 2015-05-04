@@ -18,7 +18,7 @@ case class User(
   created: DateTime = DateTime.now,
   biography: Option[String] = None,
   location: Option[String] = None,
-  gender: Option[String] = None,
+  gender: Option[Int] = None,
   avatarUrl: Option[String] = None,
   postCount: Int = 0,
   followingCount: Int = 0,
@@ -42,7 +42,7 @@ object User {
     (JsPath \ "ct").format[DateTime] and
     (JsPath \ "bio").formatNullable[String] and
     (JsPath \ "loc").formatNullable[String] and
-    (JsPath \ "gen").formatNullable[String] and
+    (JsPath \ "sex").formatNullable[Int] and
     (JsPath \ "avt").formatNullable[String] and
     (JsPath \ "_cp").format[Int] and
     (JsPath \ "_cfg").format[Int] and
